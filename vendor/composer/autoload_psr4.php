@@ -7,6 +7,6 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'WordpressFramework\\' => array($baseDir . '/app'),
-    'Fworm\\' => array($vendorDir . '/flikimax/wp-fworm/src'),
+    'Fworm\\' => array($vendorDir . '/ColombiaVIP/wp-fworm/src'),
     'Fw\\' => array($baseDir . '/Fw'),
 );

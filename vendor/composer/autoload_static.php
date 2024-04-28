@@ -7,9 +7,9 @@ namespace Composer\Autoload;
 class ComposerStaticInite4dbe638b99b562ed43b1e802e260206
 {
     public static $files = array (
-        'f59669d56395e3551023b7098f6d8dba' => __DIR__ . '/../..' . '/Fw/helpers/assets.php',
-        'ec2dd61954688f8c3e51da99206d21db' => __DIR__ . '/../..' . '/Fw/helpers/general.php',
-        'adad57b39792bf8ea687658285e24658' => __DIR__ . '/../..' . '/Fw/helpers/views.php',
+        '0405aa5c075c79d4772cf8582505076f' => __DIR__ . '/../..' . '/Fw/helpers/assets.php',
+        '7e39ca774128dbdb8f1a961769f82012' => __DIR__ . '/../..' . '/Fw/helpers/general.php',
+        '01ff5d57004dfb55301d3590fc409035' => __DIR__ . '/../..' . '/Fw/helpers/views.php',
     );
 
     public static $prefixLengthsPsr4 = array (
@@ -31,7 +31,7 @@ class ComposerStaticInite4dbe638b99b562ed43b1e802e260206
         ),
         'Fworm\\' => 
         array (
-            0 => __DIR__ . '/..' . '/flikimax/wp-fworm/src',
+            0 => __DIR__ . '/..' . '/ColombiaVIP/wp-fworm/src',
         ),
         'Fw\\' => 
         array (

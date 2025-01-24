@@ -57,7 +57,7 @@ class RequestShortcode extends Request
 
             if ( empty( $action ) ) {
                 throw new General(
-                    "<br>En el Shortcode: $this->shortcode<br>" . 'Se requiere el controller. <a target="_blank" href="https://flikimax.notion.site/95f7fde081684487b248f29a9d464c7c?v=58d41bc9f8864ff895c6e8d2e27ab245">Documentation</a> <br>',
+                    "<br>En el Shortcode: $this->shortcode<br>" . 'Se requiere el controller. </a> <br>',
                     404
                 );
             }

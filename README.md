@@ -1,9 +1,5 @@
 <h1 align="center" style="color: red !important;">Wp Framework</h1>
 
-<p align="center">
-<a href="https://flikimax.com/wp-content/projects/wordpress-framework/wordpress-framework.zip" target="_blank"><img src="https://flikimax.com/wp-content/projects/wordpress-framework/download.svg" /></a> <a href="https://github.com/Flikimax/wordpress-framework/blob/main/license.txt" target="_blank"><img src="https://flikimax.com/wp-content/projects/wordpress-framework/license.svg" /></a>
-</p>
-
 ## Descripción
 
 <p>Es un framework desarrollado para el CMS WordPress que hace uso del patrón de arquitectura mvc (modelo-vista-controlador), esto con la intensión de ayudar y disminuir el tiempo de desarrollo de sistemas.
@@ -22,7 +18,7 @@ Este proyecto se hace <strong>Open Source</strong> y será encabezado por <stron
 #### Instalación
 
 ```
-git clone https://github.com/Flikimax/wordpress-framework.git
+git clone https://github.com/ColombiaVIP/wordpress-framework.git
 ```
 
 ```
@@ -36,3 +32,8 @@ composer install
 #### Documentación
 
 [La documentación la puedes encontrar aquí.](https://docs.wordpress-framework.com/docs)
+
+## Changelog
+* First stable 1.0.0
+* Removed custom ORM, start using https://github.com/dimitriBouteille/wp-orm
+* Removes 404 controller method, use __call magic method for this.

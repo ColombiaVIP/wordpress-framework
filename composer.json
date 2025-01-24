@@ -1,5 +1,5 @@
 {
-    "name": "flikimax/wordpres-framework",
+    "name": "colombiavip/wordpres-framework",
     "description": "Framework desarrollado para el CMS WordPress que hace uso del patr\u0000n de arquitectura mvc (modelo-vista-controlador), esto con la intensi\u0000n de ayudar y disminuir el tiempo de desarrollo de sistemas.",
     "type": "framework",
     "license": "GPL-3.0",
@@ -16,13 +16,13 @@
     },
     "authors": [
         {
-            "name": "Flikimax",
-            "email": "flikimax@gmail.com"
+            "name": "ColombiaVIP",
+            "email": "info@ColombiaVIP.com"
         }
     ],
     "require": {
         "php": "^8.0.2",
-        "flikimax/wp-fworm": "^1.0"
+        "dbout/wp-orm": "^4.0"
     },
     "config": {
         "allow-plugins": {

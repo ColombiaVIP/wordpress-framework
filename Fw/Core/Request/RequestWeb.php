@@ -49,19 +49,19 @@ class RequestWeb extends Request
         $method = $this->getMethod();
     
         # Validaciones.
-        if ( !self::methodExists($controller, $method, 'isPublic') ) {
-            if (self::methodExists($controller, 'error404', 'isPublic')) {
-                $method = 'error404';
-            } else if ( !empty(get_404_template()) ) {
-                global $wp_query;
-                $wp_query->is_404 = true;
-                return get_404_template();
-            } else if (WP_DEBUG) {
-                return null;
-            } else {
-                wp_redirect('/');
-            }
-        }
+        // if ( !self::methodExists($controller, $method, 'isPublic') ) {
+        //     if (self::methodExists($controller, 'error404', 'isPublic')) {
+        //         $method = 'error404';
+        //     } else if ( !empty(get_404_template()) ) {
+        //         global $wp_query;
+        //         $wp_query->is_404 = true;
+        //         return get_404_template();
+        //     } else if (WP_DEBUG) {
+        //         return null;
+        //     } else {
+        //         wp_redirect('/');
+        //     }
+        // }
 
         return [
             new $controller, 

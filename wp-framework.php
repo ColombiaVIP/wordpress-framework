@@ -2,11 +2,11 @@
 /*
 @wordpress-plugin
 Plugin Name:    		WP Framework
-Plugin URI: 			https://github.com/Flikimax/wordpress-framework
+Plugin URI: 			https://github.com/ColombiaVIP/wordpress-framework
 Description:    		Framework mvc (modelo-vista-controlador) que ayuda a disminuir el tiempo de desarrollo de sistemas.
-Version:        		0.4.0
-Author: 				Flikimax
-Author URI: 			https://flikimax.com
+Version:        		1.0.0
+Author: 				ColombiaVIP
+Author URI: 			https://ColombiaVIP.com
 License: GPLv2 or later
 */
 

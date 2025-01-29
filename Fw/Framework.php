@@ -43,7 +43,11 @@ class Framework
     {
         # Se establecen argumentos de la aplicación.
         $this->setConfig();
-        $this->createStructures();
+        # Verifica si existe el autoloader
+        if ( ! file_exists(Paths::buildPath($this->instance->paths->pluginPath, 'autoload', 'autoload.php')) ) {
+            $this->createStructures();
+        }
+        
         $this->appAutoload();
         
         # Procesos iniciales

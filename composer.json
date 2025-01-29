@@ -21,7 +21,7 @@
         }
     ],
     "require": {
-        "php": "^8.0.2",
+        "php": "^8.3.0",
         "dbout/wp-orm": "^4.0"
     },
     "config": {

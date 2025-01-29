@@ -33,7 +33,8 @@ composer install
 
 [La documentación la puedes encontrar aquí.](https://docs.wordpress-framework.com/docs)
 
-### Changelog
+---
+### CHANGELOG
 
 ## [1.0.1] 20250124 First stable :
 * Commemted ORM FACADE to reduce load, please use manually on app, see: https://github.com/dimitriBouteille/wp-orm/wiki/DB-facade

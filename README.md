@@ -33,11 +33,11 @@ composer install
 
 [La documentación la puedes encontrar aquí.](https://docs.wordpress-framework.com/docs)
 
-## Changelog
+### Changelog
 
-### [1.0.1] 20250124 First stable :
+## [1.0.1] 20250124 First stable :
 * Commemted ORM FACADE to reduce load, please use manually on app, see: https://github.com/dimitriBouteille/wp-orm/wiki/DB-facade
 
-### [1.0.0] 20250124 First stable :
+## [1.0.0] 20250124 First stable :
 * Removed custom ORM, start using https://github.com/dimitriBouteille/wp-orm
 * Removes 404 controller method, use __call magic method for this.

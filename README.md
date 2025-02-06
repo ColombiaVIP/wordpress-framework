@@ -36,6 +36,9 @@ composer install
 ---
 ### Changelog
 
+## [1.0.3] 20250124 builsStructures :
+* Archived zip.
+
 ## [1.0.2] 20250124 builsStructures :
 * Validates file existes before build structures
 

@@ -15,14 +15,7 @@ use Fw\Paths;
 use Fw\Init\Init;
 use Fw\Config\Apps;
 use Fw\Structures\BuildStructures;
-###ORM FACADE
-// use Dbout\WpOrm\Orm\Database;
-// use Illuminate\Container\Container;
-// use Illuminate\Support\Facades\Facade;
-###ORM CONTAINER FOR FACADE
-// $container = new Container();
-// $container->instance('db', Database::getInstance());
-// Facade::setFacadeApplication($container);
+
 
 class Framework  
 { 

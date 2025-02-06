@@ -36,6 +36,9 @@ composer install
 ---
 ### Changelog
 
+## [1.0.4] 20250124 Archive :
+* Model integrated (check if needed).
+
 ## [1.0.3] 20250124 Archive :
 * Archived zip.
 

@@ -36,7 +36,7 @@ composer install
 ---
 ### Changelog
 
-## [1.0.3] 20250124 builsStructures :
+## [1.0.3] 20250124 Archive :
 * Archived zip.
 
 ## [1.0.2] 20250124 builsStructures :

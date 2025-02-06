@@ -1,6 +1,6 @@
 <?php
 /**
- * Modelo Posts
+ * Modelo Posts, ver si se necesita realmente
  * 
  */
 

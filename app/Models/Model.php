@@ -1,6 +1,6 @@
 <?php
 /**
- * Modelo abstracto.
+ * Modelo abstracto, ver si se necesita realmente.
  * 
  */
 

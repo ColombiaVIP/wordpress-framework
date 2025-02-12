@@ -36,6 +36,9 @@ composer install
 ---
 ### Changelog
 
+## [1.1.0] 20250211 Method Sub-menu :
+* Menu Pages Controller creates Sub-Menu pages for every public method.
+
 ## [1.0.4] 20250124 Archive :
 * Model integrated (check if needed).
 

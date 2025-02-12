@@ -59,19 +59,43 @@ class MenuPagesManager
                 $menuPage = $files[0];
                 unset($files[0]);
             }
+
+            
+
             
             # Menu Page
-            $menuPages[$directory] = $this->prepareMenuPage(
-                Paths::buildNamespacePath(
-                    $this->namespace, 
-                    'Controllers', 
-                    'MenuPages', 
-                    $directory, 
-                    basename($menuPage, '.php')
-                )
+            $classPath = Paths::buildNamespacePath(
+                $this->namespace, 
+                'Controllers', 
+                'MenuPages', 
+                $directory, 
+                basename($menuPage, '.php')
             );
+            $menuPages[$directory] = $this->prepareMenuPage(
+                $classPath
+            );
+            
+ 
+            # Sub Menu Page para cada metodo
+            $classMethods=get_class_methods($classPath);
+            
+            $methodKey = array_search("index", $classMethods);
+            if ($methodKey !== false) {
+                unset($classMethods[$methodKey]);
+            }
+            if( $methodKey = array_search("error404", $classMethods) ) {
+                unset($classMethods[$methodKey]);
+            }
 
-            # Sub Menu Page
+            foreach ($classMethods as $classMethod) {
+                $menuPages[$directory]['subMenuPages'][] = $this->prepareMenuPage(
+                    $classPath.'::'.$classMethod,
+                    true
+                );
+            }
+            
+
+            # Sub Menu Page para el resto de archivos
             foreach ($files as $file) {
                 $menuPages[$directory]['subMenuPages'][] = $this->prepareMenuPage(
                     Paths::buildNamespacePath(
@@ -103,7 +127,11 @@ class MenuPagesManager
      * @return array
      **/
     public function prepareMenuPage(string $class, bool $isSubMenuPage = false) : array
-    {
+    {   
+        # Primero extraigo el metodo de la clase
+        $method= explode('::', $class)[1]??null;
+        $class= explode('::', $class)[0];
+
         $controllerName = str_replace('\\', '/', $class);
         $controllerName = basename($controllerName);
         $controllerName = str_replace('Controller', '', $controllerName);
@@ -127,10 +155,28 @@ class MenuPagesManager
             'controller' => $class,
             'method' => Request::propertyExists($class, 'callable') ? $class::$callable : 'index'
         ];
+
         
         if ( !$isSubMenuPage ) {
-            # Icon
+            # Icon only for Menu Page
             $menuPage['icon'] = Request::propertyExists($class, 'icon') ? $class::$icon : 'dashicons-schedule';
+        }elseif ($method??false) { # If Method exists
+
+                # callable
+                $menuPage['callable'] = [
+                    'controller' => $class,
+                    'method' => $method,
+                ];
+
+                # Page Title
+                $menuPage['pageTitle'] .= ' ' . spaceUpper($method);
+
+                # Menu Title
+                $menuPage['menuTitle'] = spaceUpper($method);
+
+                # Slug   
+                $menuPage['menuSlug'] .= '-' . $method;
+ 
         }     
 
         # Position

@@ -36,6 +36,9 @@ composer install
 ---
 ### Changelog
 
+## [1.1.1] 20250213 WP_List_Table:
+* Added ListTableController based on WP_List_Table.
+
 ## [1.1.0] 20250211 Method Sub-menu :
 * Menu Pages Controller creates Sub-Menu pages for every public method.
 

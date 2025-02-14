@@ -28,36 +28,31 @@ if(!class_exists('WP_List_Table'))
 
 
 class ListTableController extends \WP_List_Table{
-    private $options = array(
-        'add'    => ['label' => 'Add', false],
-        'edit'   => ['label' => 'Edit', false],
-        'delete' => ['label' => 'Delete', false],
-        'view'=> ['label'=> 'Ver', false],
-      );
+    private $options;  
+    public $main;
 
-    public function get_columns($items=[]){
-        $columns = array_keys($items[0]);
-        $columnsName = array_map(function($column){
-            return ucfirst($column);
-        },$columns);
-        return array_combine($columns,$columnsName);
-    }
 
     public function prepare_items($args = []){
-        if (isset($args['options'])){
-            $this->options = array_replace_recursive($this->options, $args['options']);
-            $columns['options'] = 'Options';
-        }
-        $model = new $args['model'];
-        $items = $model::all()->toArray();
+
+        $items =  $args['items'];
+        
+        $this->main= $args['main']??'id';
+
+        $this->options= $args['options']??[
+            'add'     => 'Add',
+            'edit'    => 'Edit',
+            'delete'  => 'Delete',
+            'view'=> 'View',
+        ];
+
 
         $columns = $args['columns']??$this->get_columns($items);
 
         $hidden = $args['hiden']??['id'];
 
         $sortable = $args['sortable']??[
-            'nombre' => ['nombre', true],
-            'name' => ['name', true],
+            $this->main => [$this->main],
+
         ];
 
         usort( $items, array( &$this, 'sort_data' ) );
@@ -79,23 +74,30 @@ class ListTableController extends \WP_List_Table{
         $this->items = $items;
     }
 
+    public function get_columns($items=[]){
+        $columns = array_keys($items[0]);
+        $columnsName = array_map(function($column){
+            return ucfirst($column);
+        },$columns);
+        return array_combine($columns,$columnsName);
+    }
+
 
 
     public function column_default($item, $column_name){
-        if (isset($item[$column_name]) && $item[$column_name]){
-            return $item[$column_name];
-          }else {
-            if ($column_name == 'options'){
-              $actions = array();
-              if (isset($_GET['tableName']))
-                $tableName = 'tableName='.$_GET['tableName'];
-              foreach ($this->options as $key => $value)
-                                $actions[$key] = sprintf('<a href="?page=%s&option=%s&%s=%s">%s</a>',$_REQUEST['page'], $key, "pr",$item['id'], $value['label']);
+        {
+            if ($column_name == 'options' OR $column_name ==$this->main){    
+                $actions = array();
+
+                foreach ($this->options as $key => $value)
+                {
+                $actions[$key] = sprintf('<a href="?page=%s&option=%s&%s=%s">%s</a>',$_REQUEST['page'], $key, "id",$item['id'], $value);
+                }
     
-              return sprintf('%1$s ',  $this->row_actions($actions) );
-          }
-            return "-";
-          }
+                return sprintf('%1$s %2$s', $item[$column_name]??"➤", $this->row_actions($actions));
+            }
+            return $item[$column_name];
+         }
     }
 
 

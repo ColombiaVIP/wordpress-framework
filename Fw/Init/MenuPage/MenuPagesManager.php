@@ -76,23 +76,23 @@ class MenuPagesManager
             );
             
  
-            # Sub Menu Page para cada metodo
-            $classMethods=get_class_methods($classPath);
+            // # Sub Menu Page para cada metodo #No se si es necesario ya que option recibe los metodos
+            // $classMethods=get_class_methods($classPath);
             
-            $methodKey = array_search("index", $classMethods);
-            if ($methodKey !== false) {
-                unset($classMethods[$methodKey]);
-            }
-            if( $methodKey = array_search("error404", $classMethods) ) {
-                unset($classMethods[$methodKey]);
-            }
+            // $methodKey = array_search("index", $classMethods);
+            // if ($methodKey !== false) {
+            //     unset($classMethods[$methodKey]);
+            // }
+            // if( $methodKey = array_search("error404", $classMethods) ) {
+            //     unset($classMethods[$methodKey]);
+            // }
 
-            foreach ($classMethods as $classMethod) {
-                $menuPages[$directory]['subMenuPages'][] = $this->prepareMenuPage(
-                    $classPath.'::'.$classMethod,
-                    true
-                );
-            }
+            // foreach ($classMethods as $classMethod) {
+            //     $menuPages[$directory]['subMenuPages'][] = $this->prepareMenuPage(
+            //         $classPath.'::'.$classMethod,
+            //         true
+            //     );
+            // }
             
 
             # Sub Menu Page para el resto de archivos
@@ -128,9 +128,9 @@ class MenuPagesManager
      **/
     public function prepareMenuPage(string $class, bool $isSubMenuPage = false) : array
     {   
-        # Primero extraigo el metodo de la clase
-        $method= explode('::', $class)[1]??null;
-        $class= explode('::', $class)[0];
+        # Primero extraigo el metodo de la clase #No se si es necesario ya que option recibe los metodos
+        // $method= explode('::', $class)[1]??null;
+        // $class= explode('::', $class)[0];
 
         $controllerName = str_replace('\\', '/', $class);
         $controllerName = basename($controllerName);
@@ -160,22 +160,22 @@ class MenuPagesManager
         if ( !$isSubMenuPage ) {
             # Icon only for Menu Page
             $menuPage['icon'] = Request::propertyExists($class, 'icon') ? $class::$icon : 'dashicons-schedule';
-        }elseif ($method??false) { # If Method exists
+        }elseif ($method??false) { # If Method exists #No se si es necesario ya que option recibe los metodos
 
-                # callable
-                $menuPage['callable'] = [
-                    'controller' => $class,
-                    'method' => $method,
-                ];
+                // # callable
+                // $menuPage['callable'] = [
+                //     'controller' => $class,
+                //     'method' => $method,
+                // ];
 
-                # Page Title
-                $menuPage['pageTitle'] .= ' ' . spaceUpper($method);
+                // # Page Title
+                // $menuPage['pageTitle'] .= ' ' . spaceUpper($method);
 
-                # Menu Title
-                $menuPage['menuTitle'] = spaceUpper($method);
+                // # Menu Title
+                // $menuPage['menuTitle'] = spaceUpper($method);
 
-                # Slug   
-                $menuPage['menuSlug'] .= '-' . $method;
+                // # Slug   
+                // $menuPage['menuSlug'] .= '-' . $method;
  
         }     
 

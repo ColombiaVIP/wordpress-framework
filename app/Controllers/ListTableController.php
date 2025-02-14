@@ -3,17 +3,17 @@
  * List Table Controller.
  * USE:
          $listTable = new \WordpressFramework\Controllers\ListTableController; 
-
+        #Instanciar y preparar
         $listTable->prepare_items(
             [
-                "model"=>"\Proyectos\Models\Proyectos",
-                "columns"=>[
+                "model"=>"\Models\Path",
+                "columns"=>[#Columnas visibles
                     "id"=> "Id",
                     "nombre"=> "Nombre",
                     "descripcion"=> "Descripcion",
                 ],
-                "hiden"=>["id"],
-                "sortable"=>[
+                "hiden"=>["id"],#Columnas ocultas
+                "sortable"=>[#Columnas ordenables
                     "nombre"=>["nombre",true]
                 ]
             ]            
@@ -28,13 +28,12 @@ if(!class_exists('WP_List_Table'))
 
 
 class ListTableController extends \WP_List_Table{
-    public function __construct(){
-        parent::__construct([
-            // 'singular' => 'proyecto',
-            // 'plural' => 'proyectos',
-            'ajax' => true
-        ]);
-    }
+    private $options = array(
+        'add'    => ['label' => 'Add', false],
+        'edit'   => ['label' => 'Edit', false],
+        'delete' => ['label' => 'Delete', false],
+        'view'=> ['label'=> 'Ver', false],
+      );
 
     public function get_columns($items=[]){
         $columns = array_keys($items[0]);
@@ -42,11 +41,13 @@ class ListTableController extends \WP_List_Table{
             return ucfirst($column);
         },$columns);
         return array_combine($columns,$columnsName);
-
-        return $columns;
     }
 
     public function prepare_items($args = []){
+        if (isset($args['options'])){
+            $this->options = array_replace_recursive($this->options, $args['options']);
+            $columns['options'] = 'Options';
+        }
         $model = new $args['model'];
         $items = $model::all()->toArray();
 
@@ -68,7 +69,7 @@ class ListTableController extends \WP_List_Table{
         
         $this->set_pagination_args( array(
             'total_items' => $totalItems,
-            'per_page'    => $perPage
+            'per_page'    => $perPage,
             ) );
             
         $items = array_slice($items,(($currentPage-1)*$perPage),$perPage);
@@ -81,22 +82,20 @@ class ListTableController extends \WP_List_Table{
 
 
     public function column_default($item, $column_name){
-        return $item[$column_name];
-    }
-
-    public function column_nombre($item){
-        $actions = [
-            'edit' => sprintf('<a href="?page=%s&action=%s&project=%s">Editar</a>', $_REQUEST['page'], 'edit', $item['id']),
-            'delete' => sprintf('<a href="?page=%s&action=%s&project=%s">Eliminar</a>', $_REQUEST['page'], 'delete', $item['id'])
-        ];
-        return sprintf('%1$s %2$s', $item['nombre'], $this->row_actions($actions));
-    }
-    public function column_name($item){
-        $actions = [
-            'edit' => sprintf('<a href="?page=%s&action=%s&project=%s">Editar</a>', $_REQUEST['page'], 'edit', $item['id']),
-            'delete' => sprintf('<a href="?page=%s&action=%s&project=%s">Eliminar</a>', $_REQUEST['page'], 'delete', $item['id'])
-        ];
-        return sprintf('%1$s %2$s', $item['name'], $this->row_actions($actions));
+        if (isset($item[$column_name]) && $item[$column_name]){
+            return $item[$column_name];
+          }else {
+            if ($column_name == 'options'){
+              $actions = array();
+              if (isset($_GET['tableName']))
+                $tableName = 'tableName='.$_GET['tableName'];
+              foreach ($this->options as $key => $value)
+                                $actions[$key] = sprintf('<a href="?page=%s&option=%s&%s=%s">%s</a>',$_REQUEST['page'], $key, "pr",$item['id'], $value['label']);
+    
+              return sprintf('%1$s ',  $this->row_actions($actions) );
+          }
+            return "-";
+          }
     }
 
 
@@ -104,7 +103,7 @@ class ListTableController extends \WP_List_Table{
     /**
      * Allows you to sort the data by the variables set in the $_GET
      *
-     * @return Mixed
+     * @return mixed
      */
     private function sort_data( $a, $b )
     {

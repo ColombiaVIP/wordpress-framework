@@ -30,13 +30,24 @@ if(!class_exists('WP_List_Table'))
 class ListTableController extends \WP_List_Table{
     private $options;  
     public $main;
+    public string|bool $search;
 
 
     public function prepare_items($args = []){
 
         $items =  $args['items'];
-        
+        console_log($items);
+              
         $this->main= $args['main']??'id';
+        
+        $this->search = $args['search']??$this->main;
+
+        if(!empty($this->search)&&!empty($_GET["s"])) {
+            $items = array_filter($items, function ($var) {
+                return stristr ($var[$this->search] , (string)$_GET["s"]);
+            });
+        }
+        
 
         $this->options= $args['options']??[
             'add'     => 'Add',
@@ -100,6 +111,38 @@ class ListTableController extends \WP_List_Table{
          }
     }
 
+    public function createTable($args){
+        $title=$args['title']??'';
+
+        $this->prepare_items($args);
+
+        ob_start();        
+        if (!empty($this->search)):?>
+            <form action="" method="GET">
+                <?php $this->search_box( __( 'Search' ), sanitize_title($title) ); ?>
+                <?php if (isset($_GET)): unset($_GET['s']);?>
+                <?php foreach ($_GET as $name => $value): ?>
+                    <input type="hidden" name="<?=$name; ?>" value="<?=esc_attr($value); ?>"/>
+                <?php endforeach; ?>
+                <?php endif; ?>
+            </form>        
+        <?php endif;
+        echo "<h1 class='wp-heading-inline'>$title</h1>";
+
+
+
+        if ($args['actions']??false) {
+            foreach ($args['actions'] as $key => $value) {
+                echo "<a href='?page=".(string)$_REQUEST['page']."&option=$key' class='page-title-action'>$value</a>";
+            }
+            
+        }
+
+        $this->display() ;
+        $table = ob_get_clean();
+        return $table;
+
+    }
 
 
     /**

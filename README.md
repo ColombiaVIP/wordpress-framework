@@ -36,6 +36,11 @@ composer install
 ---
 ### Changelog
 
+## [1.1.2] 20250213 WP_List_Table:
+* Starter development of FormController.
+* Search and header actions of LisTableController, also table is returned not displayed.s
+
+
 ## [1.1.1] 20250213 WP_List_Table:
 * Added ListTableController based on WP_List_Table.
 

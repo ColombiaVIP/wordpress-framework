@@ -36,7 +36,7 @@ class ListTableController extends \WP_List_Table{
     public function prepare_items($args = []){
 
         $items =  $args['items'];
-        console_log($items);
+        // console_log($items);
               
         $this->main= $args['main']??'id';
         
@@ -110,7 +110,11 @@ class ListTableController extends \WP_List_Table{
             return $item[$column_name];
          }
     }
-
+    /**
+     * Returns the HTML of the table
+     * @param array $args
+     * @return bool|string
+     */
     public function createTable($args){
         $title=$args['title']??'';
 

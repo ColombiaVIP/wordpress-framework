@@ -54,3 +54,37 @@ function routeUrl(string $routeController) : string
 
     return '/' . trim($routeController, '/');
 }
+
+if ( ! function_exists('consoleLog') ) :
+/**
+ * console_log
+ *
+ * Allows PHP to print to js console 
+ *
+ * @param string|array|object $input Var to Show
+ * @param bool $with_script_tags Inside Script Tags
+ * @return null 
+ **/
+function consoleLog($input, $with_script_tags = true) {
+    $js_code = 'console.log(' . json_encode($input, JSON_HEX_TAG) .
+    ');';
+    if ($with_script_tags) {
+        $js_code = '<script>' . $js_code . '</script>';
+    }
+    echo $js_code;
+}
+endif;
+
+if ( ! function_exists('printPre') ) :
+/**
+ * printPre
+ *
+ * Prints any PHP object|array|var to preformatted tags 
+ *
+ * @param mixed $input Var to Show
+ * @return null 
+ **/
+function printPre($input) {
+    print("<pre>".print_r( $input,true)."</pre>");
+}
+endif;

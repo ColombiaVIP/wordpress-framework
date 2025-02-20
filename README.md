@@ -36,10 +36,14 @@ composer install
 ---
 ### Changelog
 
+## [1.1.3] 20250220:
+* Improved error handling in FormController.
+* Added unit tests for LisTableController.
+* Updated documentation links.
+
 ## [1.1.2] 20250217:
 * Starter development of FormController.
 * Search and header actions of LisTableController, also table is returned not displayed.s
-
 
 ## [1.1.1] 20250213 WP_List_Table:
 * Added ListTableController based on WP_List_Table.

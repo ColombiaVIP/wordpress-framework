@@ -130,3 +130,109 @@
     }
     /* FORMULARIO */
 }
+
+/* TABLAS */
+.dropdown-toggle::after {
+    display: none !important;
+    content: "";
+}
+
+.button-agregar.page-principal img,
+.glyphicon.glyphicon-pencil img,
+.glyphicon.glyphicon-remove img
+{
+  width: 19px;
+}
+
+a.cvip-fw-actions,
+a.cvip-fw-actions
+{
+  text-decoration: none;
+}
+
+.button-agregar.page-principal img{
+  margin-right: 10px;
+}
+
+/* TABLAS */
+
+
+
+
+/* TABLAS WORDPRESS */
+.cvip-framework-table tbody tr .options.column-options .row-actions{
+  display: contents;
+}
+/* TABLAS WORDPRESS */
+
+
+/* SETTINGS PAGE */
+.cvip-controller-enabled h3,
+.cvip-controller-enabled input
+{
+  margin: 20px 0px;
+}
+
+.cvip-container-option,
+.cvip-controller-enabled
+{
+  display: inline-flex;
+}
+
+.cvip-container-option-name,
+.cvip-controller-enabled h3
+{
+  width: 200px;
+}
+
+.accordion .title
+{
+  width: 300px;
+}
+
+.accordion .title {
+  float: left;
+}
+
+.accordion .status {
+  color: #a2a2a2;
+}
+
+.accordion {
+  background-color: #eee;
+  color: #444;
+  cursor: pointer;
+  padding: 18px;
+  width: 100%;
+  border: none;
+  text-align: left;
+  outline: none;
+  font-size: 15px;
+  transition: 0.4s;
+}
+
+.active, .accordion:hover {
+  background-color: #ccc;
+}
+
+.accordion:after {
+  content: '\002B';
+  color: #777;
+  font-weight: bold;
+  float: right;
+  margin-left: 5px;
+}
+
+.active:after {
+  /* content: "\2212"; */
+}
+
+.accordion-panel {
+  padding: 0 18px;
+  background-color: white;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.2s ease-out;
+}
+/* SETTINGS PAGE */
+

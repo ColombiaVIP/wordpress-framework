@@ -5,7 +5,7 @@
  * 
  */
 namespace WordpressFramework\Controllers\HTML;
-
+use WordpressFramework\Controllers\HTML\HTMLController as HTML;
 
 class FormController {
     public ?array $fields=null;
@@ -14,6 +14,7 @@ class FormController {
     public $table;
 
     public ?array $preparedArray=null;
+    public ?array $media=null;
  
     function __construct($args = null) {
 
@@ -21,14 +22,15 @@ class FormController {
         $this->values = $args["values"]??null;
         $this->table = $args["table"]??null;
         $this->hidden = $args["hidden"]??["id","created_at","updated_at"];
+        $this->media = $args["media"]??["image", "imagen_principal"];
     
         $this->fields?
-            $this->prepareFields():
+            $this->prepareArray():
             wp_die("FORM CONTROLLER: Error preparing fields");  
   
         
     }
-    function prepareFields() {	
+    function prepareArray() {	
         try {
             foreach ($this->fields as $field) {
  
@@ -42,33 +44,52 @@ class FormController {
         } catch (\Throwable $th) {
             wp_die ("Error preparing fields: ".$th->getMessage());
         }
- 
-        // printPre( $this->preparedArray);
-
-        
+       
         
     }
 
-    function makeHtml(): string {
-        $html = "<form method='post' action='?page=$_REQUEST[page]&option=save'>";
-        $this->table?$html .= "<input type='hidden' name='table' value='".$this->table."'>":null;
-        foreach ($this->preparedArray as $field) {
-            if(in_array($field["Field"],$this->hidden)):
-                $html .= "<input type='hidden' name='data[$field[Field]]' value='$field[Value]'>";
-            else:
-                $html .= "<label for='".$field["Field"]."'>".$field["Field"]."</label>";
-                $html .= "<input type='text' name=data[".$field["Field"]."] value='".$field["Value"]."'>";
-            endif;
-        }
-        $html .= "<input type='submit' value='Submit'>";
-        $html .= "</form>";
-        ?>
+    public function fields() {
+        $fields="";
         
+        if($this->table):
+            $fields.=HTML::hidden('table',$this->table);             
+        endif; 
+        foreach ($this->preparedArray as $field):                 
+            if(in_array($field["Field"], $this->hidden))
+            {
+                $fields.=HTML::hidden("data[$field[Field]]",$field["Value"]);
+            }
+            elseif(in_array($field["Field"], $this->media))
+            {
+                $fields.=HTML::label(
+                    $field["Field"], 
+                    HTML::media(
+                        $field["Field"], 
+                        "data[$field[Field]]",
+                        $field, 
+                        false
+                    )
+                );
 
-        <?php
-        return $html;
+            }
+            else
+            {   
+                $fields.=HTML::label(
+                    $field["Field"], 
+                    HTML::text("data[$field[Field]]", $field["Value"])
+                );
+            }   
+        endforeach;
+        $fields.=HTML::submit('Guardar'); 
+        return $fields;
+    }
 
-
+    public function html() {                   
+        return HTML::form(
+            $this->fields(),
+            $this->table,
+            "?page=$_REQUEST[page]&option=save",
+        );   
     }
  
 }

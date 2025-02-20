@@ -164,7 +164,7 @@ class LoadAssets
                 plugins_url($path),
                 array(), 
                 $version, 
-                $args['in_footer']
+                true,#Footer
             );
             wp_enqueue_script($handle);
 

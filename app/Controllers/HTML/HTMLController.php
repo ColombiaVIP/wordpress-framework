@@ -60,7 +60,7 @@ class HTMLController {
         ob_start(); ?>
             <div class="mediaUpload">
                 <input type="hidden" class="myfile <?=$key?>" name="<?=$name?>" value="<?=$field['Value']?>" placeholder="UPLOAD YOUR IMAGE" <?=$required?> >
-                <div class="imageList">
+                <div class="imageList<?=$key?>">
                 <?php foreach( explode(",",(string)$field['Value']) as $image) : ?>
                     <div>
                     <img src="<?= $image ?>" width="50px">
@@ -84,14 +84,14 @@ class HTMLController {
                         wp.media.editor.open(button);
                         var button = $(this);
                         var websiteName = window.location.protocol+"//"+window.location.host;
-                        $('.imageList').text("");
+                        $('.imageList<?=$key?>').text("");
                         var relativeUrls = [];
                         wp.media.editor.send.attachment = function(props, attachment) {
                             var relativeUrl=attachment.url.replace(websiteName, "");
                             relativeUrls.push  (relativeUrl);
                             $('.<?=$key?>').val(relativeUrls.join());
                             // console.log("website:" + websiteName);
-                            $('.imageList').append(
+                            $('.imageList<?=$key?>').append(
                                 "<div>"+
                                     "<img src='"+relativeUrl+"' width='50px'>"+
                                     "<span>"+relativeUrl+"<span>"+
@@ -105,7 +105,7 @@ class HTMLController {
                         var answer = confirm('Seguro?');
                         if (answer == true) {
                         $('.<?=$key?>').val("").text("");
-                        $('.imageList').text("");
+                        $('.imageList<?=$key?>').text("");
 
                         }
                         return false;

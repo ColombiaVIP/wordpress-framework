@@ -61,9 +61,9 @@ class HTMLController {
             <div class="mediaUpload">
                 <input type="hidden" class="myfile <?=$key?>" name="<?=$name?>" value="<?=$field['Value']?>" placeholder="UPLOAD YOUR IMAGE" <?=$required?> >
                 <div class="imageList">
-                <?php foreach( explode(",",$field['Value']) as $image) : ?>
+                <?php foreach( explode(",",(string)$field['Value']) as $image) : ?>
                     <div>
-                    <img src="<?= $image ?>" alt="" width="50px">
+                    <img src="<?= $image ?>" width="50px">
                     <span><?= $image ?></span>
                     </div>
                 <?php endforeach; ?>
@@ -84,13 +84,18 @@ class HTMLController {
                         wp.media.editor.open(button);
                         var button = $(this);
                         var websiteName = window.location.protocol+"//"+window.location.host;
-                        var relativeUrl = [];
+                        $('.imageList').text("");
+                        var relativeUrls = [];
                         wp.media.editor.send.attachment = function(props, attachment) {
-
-                            relativeUrl.push  (attachment.url.replace(websiteName, ""));
-                            $('.<?=$key?>').val(relativeUrl.join());
+                            var relativeUrl=attachment.url.replace(websiteName, "");
+                            relativeUrls.push  (relativeUrl);
+                            $('.<?=$key?>').val(relativeUrls.join());
                             // console.log("website:" + websiteName);
-                            $('.imageList').text(relativeUrl.join());                        
+                            $('.imageList').append(
+                                "<div>"+
+                                    "<img src='"+relativeUrl+"' width='50px'>"+
+                                    "<span>"+relativeUrl+"<span>"+
+                                "</div>");                        
                         }
                         return false;
                     });

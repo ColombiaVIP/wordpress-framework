@@ -1,101 +1,131 @@
 .wpfw-layout {
-    width: 100%;
-    margin: 30px 0;
+  max-width: 100%;
+}
+
+.wpfw-error-404 {
+display: grid;
+grid-template-columns: repeat(2, 1fr);
+}
+
+.wpfw-error-404 pre {
+white-space: pre-wrap;
+word-wrap: break-word;
 }
 
 .wpfw-layout h1 {
-    word-break: break-all;
-    line-height: 1.3em;
+  word-break: break-all;
+  line-height: 1.3em;
 }
 
+/* WEB */
+.wpfw-layout .tabs-getting-started {
+margin-top: 20px;
+}
+
+.wpfw-layout h3 {
+margin-bottom: 20px;
+}
+.wpfw-layout h4 {
+margin: 20px 0 10px;
+}
+
+.wpfw-layout #v-pills-tab button {
+background: #407BFF;
+border-radius: 0;
+}
+
+.wpfw-layout .tabs-getting-started img {
+max-width: 100%;
+width: 50%;
+}
 
 .wpfw-error-404 .wpfw-error-content,
 .wpfw-error-404 .wpfw-error-img
 {
-    vertical-align: middle;
-    display: inline-block;
-    width: 44%;
+  vertical-align: middle;
+  display: inline-block;
+  width: 100%;
 }
 
 .wpfw-error-404 .wpfw-error-content {
-    padding: 3.5em;
+  padding: 3.5em;
 }
 
 .wpfw-error-404 .wpfw-error-content h2 {
-    font-size: 7em;
-    font-weight: bold;
-    color: #263238;
+  font-size: 7em;
+  font-weight: bold;
+  color: #263238;
 }
 
 .wpfw-error-404 .wpfw-error-content p {
-    font-size: 1.5em;
-    margin-bottom: 30px;
+  font-size: 1.5em;
+  margin-bottom: 30px;
 }
 
 .wpfw-error-404 .wpfw-error-link a {
-    font-weight: bold;
+  font-weight: bold;
 
-    padding: 10px 20px;
-    border-radius:5px;
-    color: #fff;
-    background-color: #407BFF;
+  padding: 10px 20px;
+  border-radius:5px;
+  color: #fff;
+  background-color: #407BFF;
 }
 
 .wpfw-error-404 .wpfw-error-img {
-    text-align: center;
+  text-align: center;
 }
 
 .wpfw-error-404 .wpfw-error-img img {
-    width: 70%;
-    height: auto;
+  width: 70%;
+  height: auto;
 }
 
 
 
 /* FORMULARIO */
 .wpfw-layout .fw-form-create-plugin {
-    margin-top: 30px;
-    /* text-align: center; */
+  margin-top: 30px;
+  /* text-align: center; */
 }
 
 .fw-form-create-plugin .input-container {
-    text-align: center;
-    margin-bottom: 30px;
+  text-align: center;
+  margin-bottom: 30px;
 }
 
 .fw-form-create-plugin .input-container label,
 .fw-form-create-plugin .input-container input
 {
-    display: block;
+  display: block;
 }
 
 .fw-form-create-plugin .input-container label {
-    font-size: 1.2em;
-    margin-bottom: 10px;
+  font-size: 1.2em;
+  margin-bottom: 10px;
 }
 
 .fw-form-create-plugin .input-container input {
-    margin: auto;
-    width: 70%;
-    background: transparent;
-    border-radius: unset;
-    border: none;
-    border-bottom: solid 1px #b1b1b1;
+  margin: auto;
+  width: 70%;
+  background: transparent;
+  border-radius: unset;
+  border: none;
+  border-bottom: solid 1px #b1b1b1;
 }
 
 .fw-form-create-plugin .input-container button {
-    background: #407BFF;
-    color: #fff;
-    font-weight: bold;
-    padding: 10px 20px;
-    border-radius: 5px;
-    font-size: 1.3em;
-    font-weight: bold;
-    border: none; 
-    cursor: pointer;
+  background: #407BFF;
+  color: #fff;
+  font-weight: bold;
+  padding: 10px 20px;
+  border-radius: 5px;
+  font-size: 1.3em;
+  font-weight: bold;
+  border: none; 
+  cursor: pointer;
 }
 .fw-form-create-plugin .input-container button:hover {
-    background: #2252b9;
+  background: #2252b9;
 }
 
 /* FORMULARIO */
@@ -104,54 +134,57 @@
 
 
 @media screen and (max-width: 991px) {
-    .wpfw-error-404 .wpfw-error-content,
-    .wpfw-error-404 .wpfw-error-img
-    {
-        display: block;
-        width: 100%;
-    }
+  .wpfw-error-404 {
+    grid-template-columns: 1fr;
+}
+  .wpfw-error-404 .wpfw-error-content,
+  .wpfw-error-404 .wpfw-error-img
+  {
+      display: block;
+      width: 100%;
+  }
 
-    .wpfw-error-404 .wpfw-error-img {
-        display: none;
-    }
+  .wpfw-error-404 .wpfw-error-img {
+      display: none;
+  }
 
-    .wpfw-error-404 .wpfw-error-content {
-        padding: 0;
-    }
+  .wpfw-error-404 .wpfw-error-content {
+      padding: 0;
+  }
 
-    /* FORMULARIO */
-    .fw-form-create-plugin .input-container input {
-        margin: auto;
-        width: 90%;
-        background: transparent;
-        border-radius: unset;
-        border: none;
-        border-bottom: solid 1px #b1b1b1;
-    }
-    /* FORMULARIO */
+  /* FORMULARIO */
+  .fw-form-create-plugin .input-container input {
+      margin: auto;
+      width: 90%;
+      background: transparent;
+      border-radius: unset;
+      border: none;
+      border-bottom: solid 1px #b1b1b1;
+  }
+  /* FORMULARIO */
 }
 
 /* TABLAS */
 .dropdown-toggle::after {
-    display: none !important;
-    content: "";
+  display: none !important;
+  content: "";
 }
 
 .button-agregar.page-principal img,
 .glyphicon.glyphicon-pencil img,
 .glyphicon.glyphicon-remove img
 {
-  width: 19px;
+width: 19px;
 }
 
 a.cvip-fw-actions,
 a.cvip-fw-actions
 {
-  text-decoration: none;
+text-decoration: none;
 }
 
 .button-agregar.page-principal img{
-  margin-right: 10px;
+margin-right: 10px;
 }
 
 /* TABLAS */
@@ -161,7 +194,7 @@ a.cvip-fw-actions
 
 /* TABLAS WORDPRESS */
 .cvip-framework-table tbody tr .options.column-options .row-actions{
-  display: contents;
+display: contents;
 }
 /* TABLAS WORDPRESS */
 
@@ -170,69 +203,77 @@ a.cvip-fw-actions
 .cvip-controller-enabled h3,
 .cvip-controller-enabled input
 {
-  margin: 20px 0px;
+margin: 20px 0px;
 }
 
 .cvip-container-option,
 .cvip-controller-enabled
 {
-  display: inline-flex;
+display: inline-flex;
 }
 
 .cvip-container-option-name,
 .cvip-controller-enabled h3
 {
-  width: 200px;
+width: 200px;
 }
 
 .accordion .title
 {
-  width: 300px;
+width: 300px;
 }
 
 .accordion .title {
-  float: left;
+float: left;
 }
 
 .accordion .status {
-  color: #a2a2a2;
+color: #a2a2a2;
 }
 
 .accordion {
-  background-color: #eee;
-  color: #444;
-  cursor: pointer;
-  padding: 18px;
-  width: 100%;
-  border: none;
-  text-align: left;
-  outline: none;
-  font-size: 15px;
-  transition: 0.4s;
+background-color: #eee;
+color: #444;
+cursor: pointer;
+padding: 18px;
+width: 100%;
+border: none;
+text-align: left;
+outline: none;
+font-size: 15px;
+transition: 0.4s;
 }
 
 .active, .accordion:hover {
-  background-color: #ccc;
+background-color: #ccc;
 }
 
 .accordion:after {
-  content: '\002B';
-  color: #777;
-  font-weight: bold;
-  float: right;
-  margin-left: 5px;
+content: '\002B';
+color: #777;
+font-weight: bold;
+float: right;
+margin-left: 5px;
 }
 
-.active:after {
-  /* content: "\2212"; */
-}
+/* .active:after {
+ content: "\2212"; 
+} 
+*/
 
 .accordion-panel {
-  padding: 0 18px;
-  background-color: white;
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.2s ease-out;
+padding: 0 18px;
+background-color: white;
+max-height: 0;
+overflow: hidden;
+transition: max-height 0.2s ease-out;
 }
 /* SETTINGS PAGE */
 
+.cvipForm input, .cvipForm textarea {
+display: block;
+width: 95%;
+padding: 10px;
+margin: 1%;
+border: 1px solid #b1b1b1;
+}

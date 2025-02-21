@@ -37,9 +37,12 @@ composer install
 ### Changelog
 
 ## [1.1.3] 20250220:
-* Improved error handling in FormController.
-* Added unit tests for LisTableController.
-* Updated documentation links.
+* proyectos-adminStyle: Optimized fwAdminStyle.css and removed duplicated styles.
+* ListTableController: Corrected sort_data.
+* FormController: optimized defaults.
+* HTMLController: media method optimized.
+* helpers/general: Added functions = consoleLog, printPre.
+* wp-framework: Updated version number.
 
 ## [1.1.2] 20250217:
 * Starter development of FormController.

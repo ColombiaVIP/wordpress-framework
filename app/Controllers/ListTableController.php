@@ -173,7 +173,7 @@ class ListTableController extends \WP_List_Table{
         }
 
 
-        $result = strcmp( $a[$orderby], $b[$orderby] );
+        $result = strnatcmp( $a[$orderby], $b[$orderby] );
 
         if($order === 'asc')
         {

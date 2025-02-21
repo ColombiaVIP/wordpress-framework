@@ -11,7 +11,7 @@ class HTMLController {
 
     public static function form($fields, $class, $action){
         ob_start()?>
-        <form method='post' class="cvipTable <?=$class?>" action='<?=$action?>'>
+        <form method='post' class="cvipForm <?=$class?>" action='<?=$action?>'>
             <?=$fields?> 
         </form>
         <?PHP return ob_get_clean();
@@ -62,10 +62,7 @@ class HTMLController {
                 <input type="hidden" class="myfile <?=$key?>" name="<?=$name?>" value="<?=$field['Value']?>" placeholder="UPLOAD YOUR IMAGE" <?=$required?> >
                 <div class="imageList<?=$key?>">
                 <?php foreach( explode(",",(string)$field['Value']) as $image) : ?>
-                    <div>
-                    <img src="<?= $image ?>" width="50px">
-                    <span><?= $image ?></span>
-                    </div>
+                    <img src="<?= $image ?>" width="100px">
                 <?php endforeach; ?>
                 </div>                    
                     
@@ -88,14 +85,11 @@ class HTMLController {
                         var relativeUrls = [];
                         wp.media.editor.send.attachment = function(props, attachment) {
                             var relativeUrl=attachment.url.replace(websiteName, "");
+                            $('.imageList<?=$key?>').append(
+                                    "<img src='"+relativeUrl+"' width='100px'>"
+                            );                        
                             relativeUrls.push  (relativeUrl);
                             $('.<?=$key?>').val(relativeUrls.join());
-                            // console.log("website:" + websiteName);
-                            $('.imageList<?=$key?>').append(
-                                "<div>"+
-                                    "<img src='"+relativeUrl+"' width='50px'>"+
-                                    "<span>"+relativeUrl+"<span>"+
-                                "</div>");                        
                         }
                         return false;
                     });

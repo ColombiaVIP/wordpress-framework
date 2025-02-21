@@ -8,21 +8,23 @@ namespace WordpressFramework\Controllers\HTML;
 use WordpressFramework\Controllers\HTML\HTMLController as HTML;
 
 class FormController {
+    public $model;
     public ?array $fields=null;
     public ?array $values=null;
-    public ?array $hidden=null;
-    public $table;
-
+    public array $hidden=["id","created_at","updated_at"];
+    public ?array $media=["image","imagen", "imagen_principal","pdf","file","archivo"];
     public ?array $preparedArray=null;
-    public ?array $media=null;
  
     function __construct($args = null) {
 
         $this->fields = $args["fields"]??wp_die("FORM CONTROLLER: Fields are mandatory");
         $this->values = $args["values"]??null;
-        $this->table = $args["table"]??null;
-        $this->hidden = $args["hidden"]??["id","created_at","updated_at"];
-        $this->media = $args["media"]??["image", "imagen_principal"];
+        $this->model = $args["model"]??null;
+        
+        array_push($this->hidden , ...$args["hidden"]??[]);
+        array_push($this->media , ...$args["media"]??[]);
+
+
     
         $this->fields?
             $this->prepareArray():
@@ -36,7 +38,9 @@ class FormController {
  
                 $field=is_object($field)?(array)$field: $field;
     
-                $this->values?$field["Value"] = $this->values[$field["Field"]]:null;
+                $field["Value"] = 
+                $this->values[$field["Field"]]??
+                $_REQUEST[$field["Field"]]??null;
     
                 $this->preparedArray[]=$field;
     
@@ -51,8 +55,8 @@ class FormController {
     public function fields() {
         $fields="";
         
-        if($this->table):
-            $fields.=HTML::hidden('table',$this->table);             
+        if($this->model):
+            $fields.=HTML::hidden('model',$this->model);             
         endif; 
         foreach ($this->preparedArray as $field):                 
             if(in_array($field["Field"], $this->hidden))
@@ -87,7 +91,7 @@ class FormController {
     public function html() {                   
         return HTML::form(
             $this->fields(),
-            $this->table,
+            $this->model,
             "?page=$_REQUEST[page]&option=save",
         );   
     }

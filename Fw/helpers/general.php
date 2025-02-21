@@ -82,9 +82,15 @@ if ( ! function_exists('printPre') ) :
  * Prints any PHP object|array|var to preformatted tags 
  *
  * @param mixed $input Var to Show
- * @return null 
+ * @return string
  **/
-function printPre($input) {
-    print("<pre>".print_r( $input,true)."</pre>");
-}
+function printPre($input, $return = false) {
+    $pre="<pre>".print_r( $input,true)."</pre>";
+    if ($return) {
+        return $pre;
+    }
+    echo $pre;
+};
 endif;
+
+

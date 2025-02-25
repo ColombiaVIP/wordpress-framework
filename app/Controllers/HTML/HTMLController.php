@@ -22,9 +22,14 @@ class HTMLController {
         <?php return ob_get_clean();
     }
 
-    public static function text(string $name, $value){
+    public static function text(string $name, string $value, ?string $required, ?string $readonly){
         ob_start(); ?>
-            <input type='text' name='<?=$name?>' value='<?=$value?>'>
+            <input type='text' name='<?=$name?>' value='<?=$value?>' <?=$required?> <?=$readonly?>>
+        <?php return ob_get_clean();
+    }
+    public static function textarea(string $name, string $value, ?string $required, ?string $readonly){
+        ob_start(); ?>
+            <textarea name='<?=$name?>' <?=$required?> <?=$readonly?>><?=$value?></textarea>
         <?php return ob_get_clean();
     }
 
@@ -40,11 +45,6 @@ class HTMLController {
         <?php return ob_get_clean();
     }
 
-    public static function textarea(string $name, string $value){
-        ob_start(); ?>
-            <textarea name='<?=$name?>'><?=$value?></textarea>
-        <?php return ob_get_clean();
-    }
 
     public static function select(string $name, array $options, string $selected){
         ob_start(); ?>

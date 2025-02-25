@@ -36,6 +36,10 @@ composer install
 ---
 ### Changelog
 
+## [1.1.4] 20250224:
+* FormController.php + HTMLController.php: ReadOnly and Required options added.
+
+
 ## [1.1.3] 20250220:
 * proyectos-adminStyle: Optimized fwAdminStyle.css and removed duplicated styles.
 * ListTableController: Corrected sort_data.

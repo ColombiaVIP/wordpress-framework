@@ -44,7 +44,7 @@ class FormController {
     
                 $field["Value"] = 
                 $this->values[$field["Field"]]??
-                $_REQUEST[$field["Field"]]??null;
+                $_REQUEST[$field["Field"]]??"";
     
                 $this->preparedArray[]=$field;
     

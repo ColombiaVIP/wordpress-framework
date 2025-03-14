@@ -119,9 +119,6 @@ class Framework
                     'argsJs' => [
                         'ajaxurl' => admin_url('admin-ajax.php')
                     ],
-                    'frameworks' => [
-                        'bootstrap' => true
-                    ],
                     'in_footer' => false
                 ]
             ),

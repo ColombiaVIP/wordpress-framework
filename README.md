@@ -36,6 +36,9 @@ composer install
 ---
 ### Changelog
 
+## [1.1.5] 20250313:
+* Remove bootstrap framework loading from asset initialization.
+
 ## [1.1.4] 20250224:
 * FormController.php + HTMLController.php: ReadOnly and Required options added.
 

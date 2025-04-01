@@ -158,7 +158,7 @@ class ListTableController extends \WP_List_Table{
     {
         // Set defaults
         $orderby = 'id';
-        $order = 'asc';
+        $order = 'desc';
 
         // If orderby is set, use this as the sort column
         if(!empty($_GET['orderby']))

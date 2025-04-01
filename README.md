@@ -36,6 +36,9 @@ composer install
 ---
 ### Changelog
 
+## [1.1.6] 20250401:
+* Change default order from ascending to descending in ListTableController.
+
 ## [1.1.5] 20250313:
 * Remove bootstrap framework loading from asset initialization.
 

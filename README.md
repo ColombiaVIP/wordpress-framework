@@ -36,6 +36,9 @@ composer install
 ---
 ### Changelog
 
+## [1.1.7] 20250409:
+* Add printVars function to output PHP variables in script tags and update printPre return type.
+
 ## [1.1.6] 20250401:
 * Change default order from ascending to descending in ListTableController.
 

@@ -84,13 +84,42 @@ if ( ! function_exists('printPre') ) :
  * @param mixed $input Var to Show
  * @return string
  **/
-function printPre($input, $return = false) {
+function printPre($input, $return = false):?string  {
     $pre="<pre>".print_r( $input,true)."</pre>";
     if ($return) {
         return $pre;
     }
     echo $pre;
 };
+endif;
+
+//NOT TESTED:
+if ( ! function_exists('printVars') ) :
+/**
+ * printVars
+ *
+ * Prints any PHP object|array|var to preformatted tags 
+ *
+ * @param mixed $input Var to Show
+ * @return string
+ **/
+function printVars($input, $return = false):?string  {
+
+    foreach ( $input as $key => $value ) {
+        if ( ! is_scalar( $value ) ) {
+            continue;
+        }
+
+        $var = html_entity_decode( (string) $value, ENT_QUOTES, 'UTF-8' );
+        $vars += "var $input[$key] = " . wp_json_encode( $var ) . ';';
+    }
+    
+    $script="<script class='cvipVars'>".$vars."</script>";
+    if ($return) {
+        return $script;
+    }
+    echo $script;
+};  
 endif;
 
 

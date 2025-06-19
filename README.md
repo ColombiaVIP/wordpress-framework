@@ -36,6 +36,9 @@ composer install
 ---
 ### Changelog
 
+## [1.1.8] 20250619:
+* Change trash link color to dark red in fwAdminStyle.css.
+
 ## [1.1.7] 20250409:
 * Add printVars function to output PHP variables in script tags and update printPre return type.
 

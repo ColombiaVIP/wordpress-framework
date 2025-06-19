@@ -197,7 +197,9 @@ margin-right: 10px;
 display: contents;
 }
 /* TABLAS WORDPRESS */
-
+span[class*='trash'] a {
+    color: #7c0000!important;
+}
 
 /* SETTINGS PAGE */
 .cvip-controller-enabled h3,

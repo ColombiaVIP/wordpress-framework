@@ -70,7 +70,7 @@ class LoadAssets
      * @return void
      **/
     public static function loadAll(array $args)
-    {
+    {   
         # CARGAR JS
         self::loadJs(array (
             'path' => $args['path'],
@@ -115,7 +115,7 @@ class LoadAssets
 
         # Si cargar en el footer
         if ( !array_key_exists('in_footer', $args) ) {
-            $args['in_footer'] = false;
+            $args['in_footer'] = true;
         }
         
         # Registro
@@ -166,7 +166,6 @@ class LoadAssets
         if ( !$version = self::preloadValidation($fileList, $args)) {
             return;
         }
-
         # Registro
         $pluginPath = Paths::buildPath('wp-content', 'plugins');
         foreach ($fileList as $css) {

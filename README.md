@@ -36,6 +36,9 @@ composer install
 ---
 ### Changelog
 
+## [1.1.9] 20250628:
+* Update asset loading logic and enhance template processing in Routing.
+
 ## [1.1.8] 20250619:
 * Change trash link color to dark red in fwAdminStyle.css.
 

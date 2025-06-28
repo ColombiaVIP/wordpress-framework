@@ -17,6 +17,8 @@ class RoutingProcessor
     private $router;
     /** @var Route[] $routes Las rutas que queremos registrar en WordPress. */
     private $routes;
+    /** @var RequestWeb $currentRequest El request actual para la ruta. */
+    public $currentRequest;
 
     public function __construct(Router $router, array $routes = array())
     {
@@ -37,6 +39,7 @@ class RoutingProcessor
         add_action('init', array($self, 'registerRoutes'));
         add_action('parse_request', array($self, 'matchRequest'));
         add_action('template_include', array($self, 'loadRouteController'));
+        
     }
 
     /**
@@ -108,12 +111,14 @@ class RoutingProcessor
                 $controller,
                 $method
             );
-            $request->send();
+            $this->currentRequest = $request; // Guardar el request para template.php
 
             return \Fw\Paths::buildPath( __DIR__, 'template.php' );
         }
 
         return $template;
     }
+
+
 
 }

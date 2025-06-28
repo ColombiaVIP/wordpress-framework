@@ -4,7 +4,7 @@
 Plugin Name:    		WP Framework
 Plugin URI: 			https://github.com/ColombiaVIP/wordpress-framework
 Description:    		Framework mvc (modelo-vista-controlador) que ayuda a disminuir el tiempo de desarrollo de sistemas.
-Version:        		1.1.8
+Version:        		1.1.9
 Author: 				ColombiaVIP
 Author URI: 			https://ColombiaVIP.com
 Plugin URI: 			https://github.com/ColombiaVIP/wordpress-framework/
@@ -22,7 +22,7 @@ if ( ! require __DIR__ . '/requirements.php' ) {
 
 define('WPFW_NAME', 'WP Framework');
 define('WPFW_PATH', __DIR__);
-define('WPFW_VERSION', '1.0.0');
+define('WPFW_VERSION', '1.1.9');
 
 # Se carga el autoload del Framework.
 require __DIR__ . '/vendor/autoload.php';

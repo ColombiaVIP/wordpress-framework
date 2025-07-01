@@ -27,9 +27,14 @@ class HTMLController {
             <input type='text' name='<?=$name?>' value='<?=$value?>' <?=$required?> <?=$readonly?>>
         <?php return ob_get_clean();
     }
-    public static function textarea(string $name, string $value, ?string $required, ?string $readonly){
+    public static function textArea(string $name, string $value, ?string $required, ?string $readonly){
         ob_start(); ?>
-            <textarea name='<?=$name?>' <?=$required?> <?=$readonly?>><?=$value?></textarea>
+            <?php 
+            consoleLog("$name");
+            $settings = array( 'media_buttons' => false,'quicktags' => true,
+            'textarea_name' => $name );
+            wp_editor( $value, sanitize_title($name),$settings ); 
+            ?>
         <?php return ob_get_clean();
     }
 

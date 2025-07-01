@@ -36,6 +36,9 @@ composer install
 ---
 ### Changelog
 
+## [1.2.0] 20250701:
+* Refactor FormController to handle text areas and update HTMLController textArea method to use wp_editor.
+
 ## [1.1.9] 20250628:
 * Update asset loading logic and enhance template processing in Routing.
 

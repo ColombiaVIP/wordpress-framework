@@ -13,6 +13,7 @@ class FormController {
     public ?array $values=null;
     public array $hidden=["id","created_at","updated_at"];
     public ?array $media=["image","imagen", "imagenes","imagen_principal","pdf","file","archivo"];
+    public ?array $textArea=["descripcion"];
     public ?array $required=[];
     public ?array $readonly=[];
     public ?array $preparedArray=null;
@@ -25,6 +26,7 @@ class FormController {
         
         array_push($this->hidden , ...$args["hidden"]??[]);
         array_push($this->media , ...$args["media"]??[]);
+        array_push($this->textArea , ...$args["textArea"]??[]);
         array_push($this->required , ...$args["required"]??[]);
         array_push($this->readonly , ...$args["readonly"]??[]);
 
@@ -92,6 +94,19 @@ class FormController {
                     )
                 );
 
+            }
+            elseif (in_array($field["Field"], $this->textArea)) {
+                # code...
+                $fields.=HTML::label(
+                $field["Field"], 
+                HTML::textArea(
+                    "data[$field[Field]]", 
+                    $field["Value"],
+                    $required,
+                    $readonly,
+                    
+                    )
+                );
             }
             else
             {   

@@ -36,6 +36,9 @@ composer install
 ---
 ### Changelog
 
+## [1.3.0] 20251023:
+* Refactor template rendering by removing HTML structure from template.php, improving view functions in views.php, and adding layoutHead.php for consistent header and footer management.
+
 ## [1.2.0] 20250701:
 * Refactor FormController to handle text areas and update HTMLController textArea method to use wp_editor.
 

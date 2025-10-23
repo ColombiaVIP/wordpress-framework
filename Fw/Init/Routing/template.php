@@ -5,19 +5,7 @@
  */
 
 $template_html = get_the_block_template_html(); //NO SE DEBE COMENTAR, SINO NO SE RENDERIZA LOS FILTROS Y EL CONTENIDO DEL BLOCK TEMPLATE
-?><!DOCTYPE html>
-<html <?php language_attributes(); ?>>
-
-<head>
-	<meta charset="<?php bloginfo( 'charset' ); ?>" />
-	<?php wp_head(); ?>
-
-
-
-</head>
-
-<body <?php body_class(); ?>>
-	<?php wp_body_open(); ?>
+?>
 	
 	<?php
 	// Ejecutar el request guardado en RoutingProcessor
@@ -37,10 +25,3 @@ $template_html = get_the_block_template_html(); //NO SE DEBE COMENTAR, SINO NO S
 		$processor->currentRequest->send();
 	}
 	?>
-	<?php 
-	// echo $template_html; //SE COMENTA PARA QUE NO SE REPITA EL FRONTEND
-	?>
-	<?php wp_footer(); ?>
-</body>
-
-</html>

@@ -36,6 +36,22 @@ composer install
 ---
 ### Changelog
 
+## [1.3.1] 20260928:
+
+Correcciones locales que no cambian rutas, menús ni la carga de scripts. La versión de los assets en producción sale de la cabecera `Version` de `wp-framework.php`: `WPFW_VERSION` ya no se escribe a mano.
+
+* `WPFW_VERSION` se lee con `get_file_data()` desde la cabecera del plugin. Cambiar `Version` en `wp-framework.php` actualiza el cache-bust de CSS y JS en modo producción.
+* `composer.json`: el paquete pasa a llamarse `colombiavip/wordpress-framework`, la licencia queda en `GPL-2.0-or-later` (la misma de la cabecera) y la descripción deja de traer bytes nulos en «patrón» e «intención».
+* El menú principal ya no ignora el controlador cuando `array_search` lo encuentra en el índice 0.
+* `Apps::setConfig` guarda la opción en la propiedad pedida. Antes escribía en una variable que no existía.
+* Las vistas usan `extract()` con `EXTR_SKIP`, así un argumento no puede pisar las variables internas del renderer.
+* Pedir solo JS o solo CSS en `LoadAssets` usa la configuración de la instancia. Esos dos modos fallaban porque leían una variable inexistente.
+* `printVars` inicializa su acumulador y solo imprime claves que son identificadores JavaScript válidos.
+* `spaceUpper`, `strToSlug` y `routeUrl` se definen solo si otro plugin no las declaró antes.
+* El textarea del formulario ya no manda el nombre del campo a la consola del navegador.
+* Al crear un plugin desde el menú del framework, el nombre se imprime escapado.
+* `Model::describe()` solo ejecuta `DESCRIBE` si el nombre de tabla contiene letras, números o guion bajo.
+
 ## [1.3.0] 20251023:
 * Refactor template rendering by removing HTML structure from template.php, improving view functions in views.php, and adding layoutHead.php for consistent header and footer management.
 

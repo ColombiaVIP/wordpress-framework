@@ -16,7 +16,7 @@ Pasada de bajo riesgo aplicada. No se tocó el despacho de rutas, los nonces, el
 
 Completados en código:
 
-- `WPFW_VERSION` queda en `1.3.0`, igual que la cabecera del plugin.
+- `WPFW_VERSION` se lee de la cabecera `Version` de `wp-framework.php`. La versión actual es `1.3.1`.
 - `composer.json`: nombre `colombiavip/wordpress-framework`, licencia `GPL-2.0-or-later`, descripción sin bytes nulos.
 - `MenuPagesManager`: `array_search` comparado con `!== false`.
 - `Apps::setConfig` escribe en `$name` y ya no usa la variable inexistente `$configName`.
@@ -58,7 +58,7 @@ Completados en código:
 8. **[~] Parcial. La carga selectiva de assets está rota y es incondicional.** `LoadAssets::loadAsset`. Los casos `js` y `css` ya usan `$this->args`. Sigue pendiente honrar `in_footer` (la config pide `false` y hoy los scripts cargan en el footer; cambiarlo los movería al head), la carga en cada página y el handle único.
 9. **[ ] Pendiente. La capability por defecto es `install_plugins` y la posición es 4.** `MenuPagesManager::prepareMenuPage`. En multisitio el menú queda oculto para administradores de sitio. La posición 4 compite con los menús nativos de WordPress.
 10. **[~] Parcial. Helpers en el espacio global, sin prefijo ni `function_exists`.** `spaceUpper`, `strToSlug` y `routeUrl` ya tienen `function_exists`. Sigue pendiente el prefijo `wpfw_` (renombrarlos rompería las llamadas actuales) y sacar `getHeader` / `getFooter` del guard de `getPart`.
-11. **[x] Completado. Versión, licencia y metadatos de Composer no coinciden.** `WPFW_VERSION` es `1.3.0`. Composer usa `colombiavip/wordpress-framework`, licencia `GPL-2.0-or-later` y la descripción ya no trae bytes nulos.
+11. **[x] Completado. Versión, licencia y metadatos de Composer no coinciden.** `WPFW_VERSION` sale de la cabecera `Version` (ahora `1.3.1`). Composer usa `colombiavip/wordpress-framework`, licencia `GPL-2.0-or-later` y la descripción ya no trae bytes nulos.
 12. **[x] Completado. `array_search` trata el índice 0 como fallo.** `MenuPagesManager::prepare` compara el resultado con `!== false`.
 13. **[ ] Pendiente. Una ruta inexistente tumba la petición con `wp_die`.** `RoutingProcessor::matchRequest`. `route_not_found` no cae en la 404 del tema. Las excepciones que no son `General` (método privado, `TypeError`) tampoco se capturan y dejan pantalla blanca.
 14. **[ ] Pendiente. No hay pruebas, estándar de código ni guard `ABSPATH`.** No hay PHPUnit, PHPStan, PHPCS, CI, `readme.txt` ni `uninstall.php`. Solo `requirements.php` corta el acceso directo. El texto de interfaz no tiene text domain.
@@ -94,7 +94,7 @@ Cubre los hallazgos 1, 2, 3, 4, 6, 15 y 18.
 
 Mismo parche que la fase 1, en cuanto el despacho quede cerrado.
 
-- [x] Igualar `WPFW_VERSION` a `1.3.0`.
+- [x] `WPFW_VERSION` se lee de la cabecera `Version` del plugin.
 - [x] Unificar la licencia en `GPL-2.0-or-later`.
 - [x] Corregir el nombre del paquete Composer y quitar los bytes nulos de la descripción.
 - [~] En `LoadAssets`, usar el array `args` de la instancia. Pendiente: honrar `in_footer` y generar handles con el slug del plugin.

@@ -8,6 +8,7 @@
  * @param string $separator
  * @return string
  **/
+if ( ! function_exists('spaceUpper') ) :
 function spaceUpper(string $string, string $separator = ' ') : string
 {
     $string = preg_replace( '/[A-Z]/', "{$separator}$0",  $string);
@@ -15,6 +16,7 @@ function spaceUpper(string $string, string $separator = ' ') : string
     
     return $string;
 }
+endif;
 
 /**
  * Convierte un string a un slug.
@@ -23,6 +25,7 @@ function spaceUpper(string $string, string $separator = ' ') : string
  * @param string $separator Separador de palabras.
  * @return string
  **/
+if ( ! function_exists('strToSlug') ) :
 function strToSlug(string $string, string $separator = '-') : string
 {
     $string = remove_accents($string);
@@ -31,6 +34,7 @@ function strToSlug(string $string, string $separator = '-') : string
 
     return $string;
 }
+endif;
 
 /**
  * Retorna la url base de un controlador.
@@ -39,6 +43,7 @@ function strToSlug(string $string, string $separator = '-') : string
  * @param string $routeController
  * @return string
  **/
+if ( ! function_exists('routeUrl') ) :
 function routeUrl(string $routeController) : string
 {
     # Se remueve la palabra controller, se recorta el nombre de la clase y se remueven los acentos.
@@ -54,6 +59,7 @@ function routeUrl(string $routeController) : string
 
     return '/' . trim($routeController, '/');
 }
+endif;
 
 if ( ! function_exists('consoleLog') ) :
 /**
@@ -104,14 +110,15 @@ if ( ! function_exists('printVars') ) :
  * @return string
  **/
 function printVars($input, $return = false):?string  {
+    $vars = '';
 
     foreach ( $input as $key => $value ) {
-        if ( ! is_scalar( $value ) ) {
+        if ( ! is_scalar( $value ) || ! is_string($key) || ! preg_match('/^[A-Za-z_$][A-Za-z0-9_$]*$/', $key) ) {
             continue;
         }
 
         $var = html_entity_decode( (string) $value, ENT_QUOTES, 'UTF-8' );
-        $vars += "var $input[$key] = " . wp_json_encode( $var ) . ';';
+        $vars .= 'var ' . $key . ' = ' . wp_json_encode( $var ) . ';';
     }
     
     $script="<script class='cvipVars'>".$vars."</script>";

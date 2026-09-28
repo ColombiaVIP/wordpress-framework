@@ -29,8 +29,7 @@ class HTMLController {
     }
     public static function textArea(string $name, string $value, ?string $required, ?string $readonly){
         ob_start(); ?>
-            <?php 
-            consoleLog("$name");
+            <?php
             $settings = array( 'media_buttons' => false,'quicktags' => true,
             'textarea_name' => $name );
             wp_editor( $value, sanitize_title($name),$settings ); 

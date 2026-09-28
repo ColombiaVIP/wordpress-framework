@@ -34,16 +34,16 @@ class LoadAssets
         switch ($this->args['load']) {
             case 'js':
                 self::loadJs(array (
-                    'path' => $args['path'],
-                    'argsJs' => $args['argsJs'],
-                    'mode' => $args['mode']
+                    'path' => $this->args['path'],
+                    'argsJs' => $this->args['argsJs'],
+                    'mode' => $this->args['mode']
                 ));
                 break;
 
             case 'css':
                 self::loadCss(array (
-                    'path' => $args['path'],
-                    'mode' => $args['mode'],
+                    'path' => $this->args['path'],
+                    'mode' => $this->args['mode'],
                 ));
                 break;
             

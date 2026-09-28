@@ -1,8 +1,8 @@
 {
-    "name": "colombiavip/wordpres-framework",
-    "description": "Framework desarrollado para el CMS WordPress que hace uso del patr\u0000n de arquitectura mvc (modelo-vista-controlador), esto con la intensi\u0000n de ayudar y disminuir el tiempo de desarrollo de sistemas.",
+    "name": "colombiavip/wordpress-framework",
+    "description": "Framework desarrollado para el CMS WordPress que hace uso del patrón de arquitectura mvc (modelo-vista-controlador), esto con la intención de ayudar y disminuir el tiempo de desarrollo de sistemas.",
     "type": "framework",
-    "license": "GPL-3.0",
+    "license": "GPL-2.0-or-later",
     "autoload": {
         "psr-4": {
             "Fw\\": "Fw/",

@@ -20,9 +20,12 @@ abstract class Model extends AbstractModel
      * @return array
      */
     public function describe()  : array{
+        $table = $this->getTable();
+        if ( !is_string($table) || !preg_match('/^[A-Za-z0-9_]+$/', $table) ) {
+            return [];
+        }
 
-        return $this->getConnection()->select( "describe ".$this->getTable());
-
+        return $this->getConnection()->select( 'DESCRIBE `' . $table . '`' );
     }
 
 }

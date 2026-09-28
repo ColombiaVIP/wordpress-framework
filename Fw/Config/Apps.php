@@ -95,17 +95,28 @@ class Apps extends Singleton
      */
     public static function setConfig (string $name, mixed $config, string $pluginSlug = '') : mixed
     {
-        # Se valida que no exista la propiedad.
-        if ( property_exists( self::$instance, $name ) ) {
+        # Instancia en construcción (setApp). No se pisa una propiedad ya definida.
+        if ( self::$instance && empty($pluginSlug) ) {
+            if ( property_exists( self::$instance, $name ) ) {
+                return null;
+            }
+
+            return self::$instance->{$name} = $config;
+        }
+
+        if (
+            $pluginSlug === ''
+            || !isset(self::$instances[static::class]->{$pluginSlug})
+        ) {
             return null;
         }
 
-        # Se valida si se usara la instancia actual o el slug especificado.
-        if ( self::$instance && empty($pluginSlug) ) {
-            return self::$instance->{$name} = $config;
-        } else {
-            return self::$instances[static::class]->{$pluginSlug}->$configName = $config;
+        $app = self::$instances[static::class]->{$pluginSlug};
+        if ( property_exists( $app, $name ) ) {
+            return null;
         }
+
+        return $app->{$name} = $config;
     }
 
 }

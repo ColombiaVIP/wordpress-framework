@@ -31,7 +31,7 @@ class ResponseView extends Response
         }
 
         if ( $viewPath = viewPath($this->pluginPath, $viewName) ) {
-            extract($parameters);
+            extract($parameters, EXTR_SKIP);
             require($viewPath);
         }
     }
@@ -51,7 +51,7 @@ class ResponseView extends Response
             $args = $this->forArgs( $this->getArgs(), $pluginPath );
 
             ob_start();
-            extract($args);
+            extract($args, EXTR_SKIP);
             require $viewPath;
             return ob_get_clean(); 
         }

@@ -22,7 +22,7 @@ if ( ! require __DIR__ . '/requirements.php' ) {
 
 define('WPFW_NAME', 'WP Framework');
 define('WPFW_PATH', __DIR__);
-define('WPFW_VERSION', '1.1.9');
+define('WPFW_VERSION', '1.3.0');
 
 # Se carga el autoload del Framework.
 require __DIR__ . '/vendor/autoload.php';

@@ -49,10 +49,10 @@ class MenuPagesManager
             }
 
             # Menu Page Principal
-            if ( $menuPageKey = array_search(Paths::buildPath($mainPath, "{$directory}.php"), $files) ) {
+            if ( ($menuPageKey = array_search(Paths::buildPath($mainPath, "{$directory}.php"), $files)) !== false ) {
                 $menuPage = $files[$menuPageKey];
                 unset($files[$menuPageKey]);
-            } else if ( $menuPageKey = array_search(Paths::buildPath($mainPath, "{$directory}Controller.php"), $files) ) {
+            } else if ( ($menuPageKey = array_search(Paths::buildPath($mainPath, "{$directory}Controller.php"), $files)) !== false ) {
                 $menuPage = $files[$menuPageKey];
                 unset($files[$menuPageKey]);
             } else {

@@ -8,6 +8,11 @@ namespace Fw\Init\MenuPage;
 
 use Fw\Core\Request\RequestMenuPage;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+
 class MenuPages 
 {
     /**

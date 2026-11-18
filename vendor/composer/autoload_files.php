@@ -19,4 +19,5 @@ return array(
     '0405aa5c075c79d4772cf8582505076f' => $baseDir . '/Fw/helpers/assets.php',
     '7e39ca774128dbdb8f1a961769f82012' => $baseDir . '/Fw/helpers/general.php',
     '01ff5d57004dfb55301d3590fc409035' => $baseDir . '/Fw/helpers/views.php',
+    '750bd4f2983b53d8609fbcc7ca1a61bb' => $baseDir . '/Fw/helpers/security.php',
 );

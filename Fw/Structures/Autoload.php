@@ -9,6 +9,11 @@ namespace Fw\Structures;
 use Fw\Structures\BuildStructures;
 use Fw\Paths;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+
 class Autoload  
 { 
     /**

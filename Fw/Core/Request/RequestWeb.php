@@ -1,72 +1,70 @@
 <?php
 /**
  * Gestiona la solicitud Web para el usuario.
- * 
  */
 
 namespace Fw\Core\Request;
 
 use Fw\Core\Response\Response;
-use Fw\Core\Exceptions\General;
+use Fw\Init\Routing\ThemeNotFound;
+use Throwable;
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 class RequestWeb extends Request
 {
-    /**
-     * Valida y ejecuta la solicitud.
-     * 
-     * @return string|null
-     */
-    public function send(): ?string
-    {
-        # Ejecución de la solicitud. 
-        try {
-            # Validaciones.
-            if ( !$callback = $this->validations() ) {
-                throw new General("Method: {$this->getMethod()}", 404);
-            } else if ( is_string($callback) ) {
-                return $callback;
-            }
+	/**
+	 * Valida y ejecuta la solicitud.
+	 */
+	public function send(): ?string
+	{
+		try {
+			$callback = $this->validations();
+			if ( is_string( $callback ) || $callback === null ) {
+				ThemeNotFound::render();
+				return null;
+			}
 
-            $response = call_user_func($callback);
-            if ( $response instanceof Response ) {
-                $response->send($this->pluginPath);
-            }
-        } catch (General $e) {
-            echo $e->getError();
-        }
-        
-        return null;
-    }
+			$response = call_user_func( $callback );
+			if ( $response instanceof Response ) {
+				$response->send( $this->pluginPath );
+			}
+		} catch ( Throwable $e ) {
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				echo esc_html( $e->getMessage() );
+			}
+			ThemeNotFound::render();
+		}
 
-    /**
-     * Validaciones previas a ejecutar la solicitud.
-     *
-     * @return array|string|null
-     **/
-    public function validations(): array|string|null
-    {
-        $controller = $this->getController();
-        $method = $this->getMethod();
-    
-        # Validaciones.
-        // if ( !self::methodExists($controller, $method, 'isPublic') ) {
-        //     if (self::methodExists($controller, 'error404', 'isPublic')) {
-        //         $method = 'error404';
-        //     } else if ( !empty(get_404_template()) ) {
-        //         global $wp_query;
-        //         $wp_query->is_404 = true;
-        //         return get_404_template();
-        //     } else if (WP_DEBUG) {
-        //         return null;
-        //     } else {
-        //         wp_redirect('/');
-        //     }
-        // }
+		return null;
+	}
 
-        return [
-            new $controller, 
-            $method
-        ];
-    }
+	/**
+	 * Solo corre un método public que esté en la lista blanca.
+	 * Si el método no está permitido y el controlador ofrece error404, se usa ese.
+	 * Si no, se devuelve la plantilla 404 del tema.
+	 *
+	 * @return array{0: object, 1: string}|string|null
+	 */
+	public function validations(): array|string|null
+	{
+		$controller = $this->getController();
+		$method     = Actions::sanitizeIdentifier( $this->getMethod() ) ?? '';
 
+		if ( $method === '' || ! Actions::isAllowed( $controller, $method ) ) {
+			if ( $method !== 'error404' && Actions::isAllowed( $controller, 'error404' ) ) {
+				$method = 'error404';
+			} else {
+				$template = ThemeNotFound::template();
+				return $template !== '' ? $template : null;
+			}
+		}
+
+		return array(
+			new $controller(),
+			$method,
+		);
+	}
 }

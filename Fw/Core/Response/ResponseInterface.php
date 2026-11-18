@@ -5,6 +5,11 @@
 
 namespace Fw\Core\Response;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+
 interface ResponseInterface
 {
     /**

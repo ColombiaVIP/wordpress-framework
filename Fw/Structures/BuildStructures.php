@@ -8,6 +8,11 @@ namespace Fw\Structures;
 
 use Fw\Paths;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+
 class BuildStructures
 {
     /** @var WP_Filesystem_Direct $fileSystemDirect Clase de sistema de archivos de WordPress para la manipulación directa de archivos y carpetas PHP. */

@@ -1,5 +1,10 @@
+<?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+?>
 <div class="title">
-    <h1><?=get_admin_page_title(); ?></h1>
+    <h1><?php echo esc_html( (string) get_admin_page_title() ); ?></h1>
 </div>
 
 <div class="fw-form-create-plugin">

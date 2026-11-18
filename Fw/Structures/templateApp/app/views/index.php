@@ -1,1 +1,6 @@
-<h1><?php echo $title;?> </h1>
+<?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+?>
+<h1><?php echo esc_html( (string) ( $title ?? '' ) ); ?> </h1>

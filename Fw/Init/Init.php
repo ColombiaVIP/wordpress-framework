@@ -6,17 +6,24 @@
  * Routing
  * Menu Pages
  * Shortcodes
+ * Ajax
  * 
  */
 
 namespace Fw\Init;
 
+use Fw\Init\Ajax\AjaxManager;
 use Fw\Init\MenuPage\MenuPagesManager;
 use Fw\Init\Shortcode\ShortcodesManager;
 use Fw\Init\LoadAssets;
 use Fw\Init\Routing\RoutingManager;
 use Fw\Config\Apps;
 use Fw\Paths;
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 
 class Init  
 {
@@ -42,7 +49,8 @@ class Init
         RoutingManager::initialize(
             basename( $this->paths->pluginPath ),
             $this->paths->controllers->routes,
-            $routing
+            $routing,
+            $this->paths->pluginFilePath
         );
 
         # Procesos Iniciales.
@@ -69,6 +77,9 @@ class Init
 
         # Shortcodes
         ShortcodesManager::initialize( $this->pluginSlug );
+
+        # AJAX. La lista blanca se arma aquí, no a partir de la petición.
+        AjaxManager::initialize( $this->pluginSlug );
     }
 
     public function adminInit()

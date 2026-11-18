@@ -12,6 +12,11 @@ use Fw\Init\Routing\Route;
 use Fw\Init\Routing\Router;
 use Fw\Core\Request\Request;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+
 class RoutingManager  
 {
     /**
@@ -22,16 +27,23 @@ class RoutingManager
      * @param array $args
      * @return void
      **/
-    public static function initialize(string $routerName, string $path, array $args = array()) : void
+    public static function initialize(string $routerName, string $path, array $args = array(), string $pluginFile = '') : void
     {
         if ( !file_exists($path) ) {
             return;
         }
 
-        $router = new Router($routerName, $args['force']);
+        $router = new Router($routerName, (bool) ( $args['force'] ?? false ));
         $router->pluginPath = Paths::trimPath($path, 2);
         $routes = self::prepareRoutes(Paths::createNamespace( $routerName ), $path);
-        RoutingProcessor::init($router, $routes);
+        $processor = RoutingProcessor::init($router, $routes);
+
+        if ( $pluginFile !== '' && function_exists( 'register_activation_hook' ) ) {
+            register_activation_hook( $pluginFile, static function () use ( $processor ) : void {
+                $processor->registerRoutes();
+                flush_rewrite_rules();
+            } );
+        }
     }
 
     /**

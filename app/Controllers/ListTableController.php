@@ -23,6 +23,13 @@
  */
 namespace WordpressFramework\Controllers;
 
+use Fw\Core\Request\Actions;
+use Fw\Core\Request\AdminActions;
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 if(!class_exists('WP_List_Table'))
     require_once(ABSPATH.'wp-admin/includes/class-wp-list-table.php');
 
@@ -42,9 +49,15 @@ class ListTableController extends \WP_List_Table{
         
         $this->search = $args['search']??$this->main;
 
-        if(!empty($this->search)&&!empty($_GET["s"])) {
-            $items = array_filter($items, function ($var) {
-                return stristr ($var[$this->search] , (string)$_GET["s"]);
+        $term = '';
+        if ( isset( $_GET['s'] ) && is_string( $_GET['s'] ) ) {
+            $term = sanitize_text_field( wp_unslash( $_GET['s'] ) );
+        }
+
+        if(!empty($this->search) && $term !== '') {
+            $items = array_filter($items, function ($var) use ($term) {
+                $haystack = is_array($var) ? (string) ($var[$this->search] ?? '') : '';
+                return stristr ($haystack , $term);
             });
         }
         
@@ -97,18 +110,46 @@ class ListTableController extends \WP_List_Table{
 
     public function column_default($item, $column_name){
         {
-            if ($column_name == 'options' OR $column_name ==$this->main){    
-                $actions = array();
+            if ($column_name == 'options' OR $column_name ==$this->main){
+                $actions = $this->actionLinks( is_array( $item ) ? $item : array() );
+                $label   = esc_html( (string) ( $item[ $column_name ] ?? '➤' ) );
 
-                foreach ($this->options as $key => $value)
-                {
-                $actions[$key] = sprintf('<a href="?page=%s&option=%s&%s=%s">%s</a>',$_REQUEST['page'], $key, "id",$item['id'], $value);
-                }
-    
-                return sprintf('%1$s %2$s', $item[$column_name]??"➤", $this->row_actions($actions));
+                return sprintf('%1$s %2$s', $label, $this->row_actions($actions));
             }
-            return $item[$column_name];
+            return esc_html( (string) ( $item[ $column_name ] ?? '' ) );
          }
+    }
+
+    /**
+     * Enlaces de fila. Cada option lleva nonce y tiene que ser un identificador.
+     *
+     * @param array<string, mixed> $item
+     * @return array<string, string>
+     */
+    private function actionLinks( array $item ): array
+    {
+        $actions = array();
+        $page    = AdminActions::currentPage();
+        if ( $page === null ) {
+            return $actions;
+        }
+
+        $id = isset( $item['id'] ) && ( is_scalar( $item['id'] ) ) ? (string) $item['id'] : '';
+
+        foreach ( $this->options as $key => $value ) {
+            if ( Actions::sanitizeIdentifier( (string) $key ) === null ) {
+                continue;
+            }
+
+            $url = AdminActions::url( $page, (string) $key, array( 'id' => $id ) );
+            $actions[ $key ] = sprintf(
+                '<a href="%s">%s</a>',
+                esc_url( $url ),
+                esc_html( (string) $value )
+            );
+        }
+
+        return $actions;
     }
     /**
      * Returns the HTML of the table
@@ -125,21 +166,23 @@ class ListTableController extends \WP_List_Table{
             <form action="" method="GET">
                 <?php $this->search_box( __( 'Search' ), sanitize_title($title) ); ?>
                 <?php if (isset($_GET)): unset($_GET['s']);?>
-                <?php foreach ($_GET as $name => $value): ?>
-                    <input type="hidden" name="<?=$name; ?>" value="<?=esc_attr($value); ?>"/>
+                <?php foreach ( $_GET as $name => $value ) : ?>
+                    <?php if ( ! is_string( $name ) || is_array( $value ) ) { continue; } ?>
+                    <input type="hidden" name="<?php echo esc_attr( $name ); ?>" value="<?php echo esc_attr( wp_unslash( $value ) ); ?>"/>
                 <?php endforeach; ?>
                 <?php endif; ?>
             </form>        
         <?php endif;
-        echo "<h1 class='wp-heading-inline'>$title</h1>";
+        echo "<h1 class='wp-heading-inline'>" . esc_html( (string) $title ) . "</h1>";
 
-
-
-        if ($args['actions']??false) {
-            foreach ($args['actions'] as $key => $value) {
-                echo "<a href='?page=".(string)$_REQUEST['page']."&option=$key' class='page-title-action'>$value</a>";
+        $page = AdminActions::currentPage();
+        if ( ( $args['actions'] ?? false ) && $page !== null ) {
+            foreach ( $args['actions'] as $key => $value ) {
+                if ( Actions::sanitizeIdentifier( (string) $key ) === null ) {
+                    continue;
+                }
+                echo '<a href="' . esc_url( AdminActions::url( $page, (string) $key ) ) . '" class="page-title-action">' . esc_html( (string) $value ) . '</a>';
             }
-            
         }
 
         $this->display() ;
@@ -156,30 +199,30 @@ class ListTableController extends \WP_List_Table{
      */
     private function sort_data( $a, $b )
     {
-        // Set defaults
         $orderby = 'id';
-        $order = 'desc';
+        $order   = 'desc';
 
-        // If orderby is set, use this as the sort column
-        if(!empty($_GET['orderby']))
-        {
-            $orderby = $_GET['orderby'];
+        if ( isset( $_GET['orderby'] ) && is_string( $_GET['orderby'] ) ) {
+            $candidate = Actions::sanitizeIdentifier( wp_unslash( $_GET['orderby'] ) );
+            if (
+                $candidate !== null
+                && is_array( $a )
+                && array_key_exists( $candidate, $a )
+                && is_array( $b )
+                && array_key_exists( $candidate, $b )
+            ) {
+                $orderby = $candidate;
+            }
         }
 
-        // If order is set use this as the order
-        if(!empty($_GET['order']))
-        {
-            $order = $_GET['order'];
+        if ( isset( $_GET['order'] ) && is_string( $_GET['order'] ) && strtolower( wp_unslash( $_GET['order'] ) ) === 'asc' ) {
+            $order = 'asc';
         }
 
+        $left   = is_array( $a ) ? (string) ( $a[ $orderby ] ?? '' ) : '';
+        $right  = is_array( $b ) ? (string) ( $b[ $orderby ] ?? '' ) : '';
+        $result = strnatcmp( $left, $right );
 
-        $result = strnatcmp( $a[$orderby], $b[$orderby] );
-
-        if($order === 'asc')
-        {
-            return $result;
-        }
-
-        return -$result;
+        return $order === 'asc' ? $result : -$result;
     }
 }

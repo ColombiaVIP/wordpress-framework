@@ -8,6 +8,11 @@
 
 use WordpressFramework\Models\Model;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+
 class Posts extends Model
 {
  

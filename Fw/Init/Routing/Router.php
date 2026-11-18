@@ -6,6 +6,11 @@
 
 namespace Fw\Init\Routing;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+
 class Router
 {
     /** @var string $routeName Nombre de la ruta. */
@@ -16,6 +21,9 @@ class Router
     private bool $force;
     /** @var string $pluginPath */
     public $pluginPath = '';
+
+    /** @var bool $methodTagReady El query var de método de este plugin ya se registró. */
+    private bool $methodTagReady = false;
 
     public function __construct(string $routeName, bool $force = false)
     {
@@ -44,20 +52,44 @@ class Router
      */
     public function compile() : void
     {
-        # Para el controlador
+        # Para el controlador. El query var "method" no se registra aquí:
+        # cada plugin usa el suyo, y solo si alguna ruta tiene enableUri.
         add_rewrite_tag(
             "%{$this->routeName}%", 
-            '(.+)'
-        );
-        # Para el uso de métodos por medio de URI
-        add_rewrite_tag(
-            "%method%", 
             '(.+)'
         );
 
         foreach ($this->routes as $name => $route) {
             $this->addRule($name, $route);
         }
+    }
+
+    /**
+     * Query var del segmento de método. cvip-loteria pasa a cvip_loteria_method.
+     */
+    public function getMethodQueryVar(): string
+    {
+        $safe = strtolower( str_replace( '-', '_', $this->routeName ) );
+        $safe = (string) preg_replace( '/[^a-z0-9_]/', '', $safe );
+        $safe = trim( $safe, '_' );
+        if ( $safe === '' ) {
+            $safe = 'wpfw';
+        }
+
+        return $safe . '_method';
+    }
+
+    /**
+     * Registra el tag del método una sola vez, y solo porque hay una ruta con enableUri.
+     */
+    private function registerMethodTag(): void
+    {
+        if ( $this->methodTagReady ) {
+            return;
+        }
+
+        add_rewrite_tag( '%' . $this->getMethodQueryVar() . '%', '([^/]*)' );
+        $this->methodTagReady = true;
     }
 
     /**
@@ -86,9 +118,12 @@ class Router
      */
     public function addRuleEnableUri(string $name, Route $route) : void
     {
+        $this->registerMethodTag();
+        $queryVar = $this->getMethodQueryVar();
+
         add_rewrite_rule(
-            $this->generateRouteRegex($route, '/([^/]*)'), 
-            "index.php?{$this->routeName}=$name" . '&method=$matches[1]', 
+            $this->generateRouteRegex($route, '/([^/]*)'),
+            'index.php?' . $this->routeName . '=' . $name . '&' . $queryVar . '=$matches[1]',
             $this->priority($route)
         );
     }

@@ -1,6 +1,11 @@
 <?php
 namespace Composer\Autoload;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+
 class ComposerStaticInit
 {
 

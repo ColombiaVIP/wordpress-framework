@@ -5,6 +5,11 @@
 
 namespace Fw\Core\Request;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+
 interface RequestInterface
 {
     /**

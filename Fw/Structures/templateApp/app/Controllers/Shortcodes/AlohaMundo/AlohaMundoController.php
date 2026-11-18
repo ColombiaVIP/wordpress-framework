@@ -1,4 +1,9 @@
 <?php
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Shortcode
  * 
@@ -8,6 +13,14 @@
 
 class AlohaMundoController
 {
+    /**
+     * saludo solo responde si está en esta lista.
+     * Shortcode: [tag Alohamundo=AlohaMundo@saludo]
+     *
+     * @var list<string>
+     */
+    public static array $webActions = array( 'saludo' );
+
     /**
      * Método defaul.
      * 

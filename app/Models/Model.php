@@ -8,6 +8,11 @@ namespace WordpressFramework\Models;
 
 use Dbout\WpOrm\Orm\AbstractModel;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+
 
 
 abstract class Model extends AbstractModel

@@ -8,6 +8,11 @@ namespace Fw\Init;
 
 use Fw\Paths;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+
 class LoadAssets  
 {
     public array $args;

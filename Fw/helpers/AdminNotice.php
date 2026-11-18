@@ -1,4 +1,9 @@
 <?php
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Clase para mostrar mensajes de adminitración.
  * 
@@ -35,9 +40,9 @@ class AdminNotice
             //     return;
             // } ?> 
 
-            <div class="notice notice-<?php echo $type; ?> <?php echo $optionally; ?>">
-                <h1><?php echo $title; ?></h1>
-                <p><?php _e( $content, 'wp-framework' ); ?></p>
+            <div class="notice notice-<?php echo esc_attr( $type ); ?> <?php echo esc_attr( $optionally ); ?>">
+                <h1><?php echo esc_html( $title ); ?></h1>
+                <p><?php echo wp_kses_post( $content ); ?></p>
             </div> <?php
         });
     }

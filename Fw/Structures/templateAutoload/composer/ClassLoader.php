@@ -2,6 +2,11 @@
 
 namespace Composer\Autoload;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+
 class ClassLoader
 {
     private $vendorDir;

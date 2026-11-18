@@ -1,5 +1,11 @@
+<?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+$page = isset( $_GET['page'] ) && is_string( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+?>
 <div class="title">
-    <h1><?=$category; ?></h1>
+    <h1><?php echo esc_html( (string) ( $category ?? '' ) ); ?></h1>
 </div>
 
 <div class="description">
@@ -21,5 +27,5 @@
 </div>
 
 <div class="wpfw-button">
-    <a href="<?php menu_page_url( $_GET['page'] ); ?>">GO CATEGORIES</a>
+    <a href="<?php echo esc_url( (string) menu_page_url( $page, false ) ); ?>">GO CATEGORIES</a>
 </div>

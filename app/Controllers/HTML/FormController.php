@@ -5,7 +5,13 @@
  * 
  */
 namespace WordpressFramework\Controllers\HTML;
+
+use Fw\Core\Request\AdminActions;
 use WordpressFramework\Controllers\HTML\HTMLController as HTML;
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 class FormController {
     public $model;
@@ -20,7 +26,7 @@ class FormController {
  
     function __construct($args = null) {
 
-        $this->fields = $args["fields"]??wp_die("FORM CONTROLLER: Fields are mandatory");
+        $this->fields = $args["fields"] ?? wp_die( esc_html( 'Los campos del formulario son obligatorios.' ) );
         $this->values = $args["values"]??null;
         $this->model = $args["model"]??null;
         
@@ -34,7 +40,7 @@ class FormController {
     
         $this->fields?
             $this->prepareArray():
-            wp_die("FORM CONTROLLER: Error preparing fields");  
+            wp_die( esc_html( 'No se pudieron preparar los campos del formulario.' ) );  
   
         
     }
@@ -44,15 +50,22 @@ class FormController {
  
                 $field=is_object($field)?(array)$field: $field;
     
-                $field["Value"] = 
-                $this->values[$field["Field"]]??
-                $_REQUEST[$field["Field"]]??"";
+                $incoming = '';
+                if (
+                    ! isset( $this->values[ $field['Field'] ] )
+                    && isset( $_REQUEST[ $field['Field'] ] )
+                    && is_string( $_REQUEST[ $field['Field'] ] )
+                ) {
+                    $incoming = wp_unslash( $_REQUEST[ $field['Field'] ] );
+                }
+
+                $field['Value'] = $this->values[ $field['Field'] ] ?? $incoming;
     
                 $this->preparedArray[]=$field;
     
             }
         } catch (\Throwable $th) {
-            wp_die ("Error preparing fields: ".$th->getMessage());
+            wp_die( esc_html( 'No se pudieron preparar los campos del formulario.' ) );
         }
        
         
@@ -126,12 +139,15 @@ class FormController {
         return $fields;
     }
 
-    public function html() {                   
+    public function html() {
+        $page   = AdminActions::currentPage() ?? '';
+        $fields = AdminActions::field( $page, 'save' ) . $this->fields();
+
         return HTML::form(
-            $this->fields(),
-            $this->model,
-            "?page=$_REQUEST[page]&option=save",
-        );   
+            $fields,
+            (string) $this->model,
+            AdminActions::postUrl( $page, 'save' ),
+        );
     }
  
 }

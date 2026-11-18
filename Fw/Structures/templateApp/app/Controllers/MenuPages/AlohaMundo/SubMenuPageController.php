@@ -1,4 +1,9 @@
 <?php
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Sub Menu Page 
  * 
@@ -32,7 +37,7 @@ class SubMenuPageController
         return view('layout', [
             'content' => view('404', [
                 'backText' => 'GO BACK',
-                'backLink' => menu_page_url($_GET['page'], false)
+                'backLink' => menu_page_url( isset( $_GET['page'] ) && is_string( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '', false )
             ]),
         ]);
     }

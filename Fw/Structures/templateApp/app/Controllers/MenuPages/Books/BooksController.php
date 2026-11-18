@@ -1,4 +1,9 @@
 <?php
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Menu Page Books.
  */
@@ -13,7 +18,7 @@ class BooksController
     # https://developer.wordpress.org/reference/functions/add_menu_page
     public static $pageTitle  = 'Fw Libros';
     public static $menuTitle  = 'Fw Libros';
-    public static $capability = 'install_plugins';
+    public static $capability = 'manage_options';
     public static $menuSlug   = 'fw-libros';
     public static $icon       = 'dashicons-book-alt';
     

@@ -10,6 +10,11 @@ namespace Fw\Config;
 
 use Fw\Config\Singleton;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+
 class Apps extends Singleton
 {
     /** @var string|null $currentPluginSlug Slug de la App actual. */

@@ -1,5 +1,10 @@
+<?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+?>
 <div class="title">
-    <h1><?=get_admin_page_title(); ?></h1>
+    <h1><?php echo esc_html( (string) get_admin_page_title() ); ?></h1>
 </div>
 
 <div class="description">
@@ -22,10 +27,10 @@
 
 <div class="fw-book-category">
     <ul class="category-list">
-        <?php foreach ($categoryList as $slug => $category): ?>
+        <?php foreach ( $categoryList as $slug => $category ) : ?>
             <li class="fw-book-category-item">
-                <a href="<?=menu_page_url("{$baseUrl}-categories", false) . "&cat=$slug"; ?>">
-                    <?=$category; ?>
+                <a href="<?php echo esc_url( (string) menu_page_url( (string) $baseUrl . '-categories', false ) . '&cat=' . rawurlencode( (string) $slug ) ); ?>">
+                    <?php echo esc_html( (string) $category ); ?>
                 </a>
         </li>
         <?php endforeach; ?>

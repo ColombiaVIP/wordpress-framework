@@ -1,7 +1,9 @@
 <?php
 /**
  * Gestiona las solicitudes y la creación de Shortcode.
- * 
+ *
+ * La categoría, la clase y el método tienen que ser identificadores.
+ * El método, además, tiene que estar en la lista blanca del controlador.
  */
 
 namespace Fw\Core\Request;
@@ -9,184 +11,188 @@ namespace Fw\Core\Request;
 use Fw\Core\Exceptions\General;
 use Fw\Core\Response\Response;
 use Fw\Config\Apps;
-use Exception;
 use Fw\Paths;
+use Throwable;
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 class RequestShortcode extends Request
 {
-    /** @var object $instance Instancia de la App actual. */
-    private object $instance;
+	/** @var object $instance Instancia de la App actual. */
+	private object $instance;
 
-    /** @var string $shortcode Recreación del Shortcode a ejecutar. */
-    private string $shortcode;
+	/** @var string $category Categoría a la que pertenece el controlador a ejecutar. */
+	private string $category = '';
 
-    /** @var string $category Categoría a la que pertenece el controlador a ejecutar. */
-    private string $category;
+	/** @var array $params Atributos del shortcode, sin la categoría. */
+	private array $params = array();
 
-    /** @var array $params Controlador a ejecutar. */
-    private array $params;
+	/** @var array $files Listado de archivos de los shortcodes. */
+	private array $files = array();
 
-    /** @var array $files Listado de archivos de los shortcodes. */
-    private array $files;
-    
-    /**
-     * Se valida y prepara los datos.
-     * Ejecuta el Request.
-     *
-     * @param array $attrs Array de atributos del Shortcode.
-     * @param string $content Contenido del Shortcode o nulo si no se establece.
-     * @param string $shortcodeTag Shortcode tag.
-     * Puedes obtener más información: https://developer.wordpress.org/reference/functions/add_shortcode/#parameters
-     *
-     * @return null|string
-     */
-    public function prepare(array $attrs = array(), string $content = '', string $shortcodeTag = ''): ?string
-    {
-        $this->instance = Apps::getApp( $this->pluginPath );
-        
-        try {
-            # Se recrea el Shortcode con los atributos a ejecutar.
-            $this->shortcode = "[$shortcodeTag ";
-            foreach ($attrs as $key => $value) {
-                $this->shortcode.= "$key='$value' ";
-            }
-            $this->shortcode .= ']';
+	/**
+	 * @param array  $attrs         Atributos del shortcode. El primero es Categoria=Clase@metodo.
+	 * @param string $content       Contenido interno. No se usa para elegir el método.
+	 * @param string $shortcodeTag  Tag registrado.
+	 */
+	public function prepare( array $attrs = array(), string $content = '', string $shortcodeTag = '' ): ?string
+	{
+		unset( $content, $shortcodeTag );
 
-            $this->category = sanitize_text_field( key($attrs) );
-            $action = sanitize_text_field( array_shift($attrs) );
+		$instance = Apps::getApp( $this->pluginPath );
+		if ( ! is_object( $instance ) ) {
+			return null;
+		}
+		$this->instance = $instance;
 
-            if ( empty( $action ) ) {
-                throw new General(
-                    "<br>En el Shortcode: $this->shortcode<br>" . 'Se requiere el controller. </a> <br>',
-                    404
-                );
-            }
+		try {
+			$categoryKey = array_key_first( $attrs );
+			if ( ! is_string( $categoryKey ) ) {
+				throw new General( 'El shortcode no indica una categoría válida.', 404 );
+			}
 
-            $action = explode('@', $action);
-            
-            # Se obtienen los archivos de la categoría del Shortcode.
-            $path = Paths::buildPath(
-                $this->instance->paths->controllers->shortcodes, 
-                $this->category,
-                '*.php'
-            );
-            $this->files = glob( $path );
-            
-            $this->controller = Paths::buildNamespacePath( 
-                $this->instance->config->namespace,
-                'Controllers',
-                'Shortcodes',
-                $this->category,
-                $action[0]
-            );
+			$category = Actions::sanitizeIdentifier( $categoryKey );
+			if ( $category === null ) {
+				throw new General( 'El shortcode no indica una categoría válida.', 404 );
+			}
 
-            if ( class_exists($this->controller . 'Controller') ) {
-                $this->controller = $this->controller . 'Controller';
-            } else if ( !class_exists($this->controller) ) {
-                throw new General("En el Shortcode: $this->shortcode<br>El Controller: $this->controller no fue encontrado.", 404);
-            }
+			$actionRaw = $attrs[ $categoryKey ] ?? '';
+			unset( $attrs[ $categoryKey ] );
 
-            $this->method = ( isset( $action[1] ) && !empty( $action[1] ) ) ? $action[1] : 'index';
-            $this->params = $attrs;
+			$params = array();
+			foreach ( $attrs as $key => $value ) {
+				if ( ! is_string( $key ) || is_array( $value ) || is_object( $value ) ) {
+					continue;
+				}
+				if ( Actions::sanitizeIdentifier( $key ) === null ) {
+					continue;
+				}
+				$params[ $key ] = (string) $value;
+			}
 
-            ob_start();
-            $this->send();
-            return ob_get_clean();
-        } catch (Exception $e) {
-            if ( WP_DEBUG ) {
-                return $e->getMessage();
-            }
-            
-            return null;
-        }
-    }
+			$actionRaw = is_string( $actionRaw ) ? sanitize_text_field( $actionRaw ) : '';
+			if ( $actionRaw === '' ) {
+				throw new General( 'El shortcode requiere un controlador.', 404 );
+			}
 
-    /**
-     * Se valida y ejecuta la solicitud para los Shortcodes.
-     * 
-     * @return string|null;
-     */
-    public function send() : ?string
-    {
-        # Ejecución de la solicitud. 
-        try {
-            # Se valida que el Shortcode tenga permiso para ejecutar el archivo de clase.
-            if ( !$this->isAllowedFile() ) {
-                throw new General("El Shortcode <strong>$this->shortcode</strong> no puede acceder al controlador: <strong>{$this->getController()}</strong>.", 404);
-            }
+			$action = explode( '@', $actionRaw, 2 );
+			$class  = Actions::sanitizeIdentifier( $action[0] );
+			if ( $class === null ) {
+				throw new General( 'El controlador del shortcode no es válido.', 404 );
+			}
 
-            # Validaciones método.
-            if ( !$callback = $this->validations() ) {
-                throw new General("Method: {$this->getMethod()}", 404);
-            }
-            
-            $response = call_user_func_array(
-                $callback, 
-                [$this->params]
-            );
+			$method = 'index';
+			if ( isset( $action[1] ) && $action[1] !== '' ) {
+				$parsed = Actions::sanitizeIdentifier( $action[1] );
+				if ( $parsed === null ) {
+					throw new General( 'El método del shortcode no es válido.', 404 );
+				}
+				$method = $parsed;
+			}
 
-            if ($response instanceof Response) {
-                $response->send( $this->instance->paths->app );
-            }
-        } catch ( General $e ) {
-            echo $e->getError();
-        }
-        
-        return null;
-    }
+			$this->category = $category;
+			$this->params   = $params;
+			$this->method   = $method;
 
-    /**
-     * Validaciones previas a ejecutar la solicitud.
-     *
-     * @return null|array
-     **/
-    public function validations() : ?array
-    {
-        $controller = $this->getController();
-        $method = $this->getMethod();
+			$path        = Paths::buildPath(
+				$this->instance->paths->controllers->shortcodes,
+				$this->category,
+				'*.php'
+			);
+			$found       = glob( $path );
+			$this->files = is_array( $found ) ? $found : array();
 
-        # Validación del Método.
-        if ( !empty($method) ) {
-            $method = $this->getMethod();
-        } else {
-            $method = 'index';
-        }
+			$this->controller = Paths::buildNamespacePath(
+				$this->instance->config->namespace,
+				'Controllers',
+				'Shortcodes',
+				$this->category,
+				$class
+			);
 
-        if ( !self::methodExists($controller, $method, 'isPublic') ) {
-            if (self::methodExists($controller, 'error404', 'isPublic')) {
-                $method = 'error404';
-            } else {
-                return null;
-            }
-        }
+			if ( class_exists( $this->controller . 'Controller' ) ) {
+				$this->controller .= 'Controller';
+			} elseif ( ! class_exists( $this->controller ) ) {
+				throw new General( 'No se encontró el controlador del shortcode.', 404 );
+			}
 
-        return [
-            new $controller($this->params), 
-            $method
-        ];
-    }
+			ob_start();
+			$this->send();
+			return ob_get_clean();
+		} catch ( Throwable $e ) {
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				return esc_html( $e->getMessage() );
+			}
 
-    /**
-     * Se valida que el shortcode pueda ejecutar el archivo.
-     *
-     * @return bool
-     **/
-    public function isAllowedFile() : bool
-    {
-        $controllerName = basename( Paths::parsePath($this->getController()) );
-        
-        $controllerPath = Paths::parsePath(
-            Paths::buildPath(
-                $this->instance->paths->controllers->shortcodes,
-                $this->category,
-                "$controllerName.php"
-            )
-        ); 
+			return null;
+		}
+	}
 
-        if ( in_array($controllerPath, $this->files) ) {
-            return true;
-        }
+	public function send(): ?string
+	{
+		try {
+			if ( ! $this->isAllowedFile() ) {
+				throw new General( 'El shortcode no puede usar ese controlador.', 404 );
+			}
 
-        return false;
-    }
+			$callback = $this->validations();
+			if ( ! $callback ) {
+				throw new General( 'El método del shortcode no está permitido.', 404 );
+			}
+
+			$response = $this->invoke( $callback, array( $this->params ) );
+			if ( $response instanceof Response ) {
+				$response->send( $this->instance->paths->app );
+			}
+		} catch ( Throwable $e ) {
+			if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+				echo esc_html( $e->getMessage() );
+			}
+		}
+
+		return null;
+	}
+
+	/**
+	 * @return array{0: object, 1: string}|null
+	 */
+	public function validations(): ?array
+	{
+		$controller = $this->getController();
+		$method     = Actions::sanitizeIdentifier( $this->getMethod() ) ?? '';
+
+		if ( $method === '' || ! Actions::isAllowed( $controller, $method ) ) {
+			if ( $method !== 'error404' && Actions::isAllowed( $controller, 'error404' ) ) {
+				$method = 'error404';
+			} else {
+				return null;
+			}
+		}
+
+		$this->method = $method;
+
+		return array(
+			new $controller( $this->params ),
+			$method,
+		);
+	}
+
+	/**
+	 * El archivo tiene que estar dentro de la carpeta de la categoría, ya saneada.
+	 */
+	public function isAllowedFile(): bool
+	{
+		$controllerName = basename( Paths::parsePath( $this->getController() ) );
+		$controllerPath = Paths::parsePath(
+			Paths::buildPath(
+				$this->instance->paths->controllers->shortcodes,
+				$this->category,
+				$controllerName . '.php'
+			)
+		);
+
+		return in_array( $controllerPath, $this->files, true );
+	}
 }

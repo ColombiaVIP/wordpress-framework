@@ -6,6 +6,11 @@
 
 namespace Fw\Core\Response;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+
 class ResponseAsset extends Response
 {
     /**

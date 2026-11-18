@@ -9,6 +9,11 @@ use Fw\Core\Request\RequestShortcode;
 use Fw\Config\Apps;
 use Fw\Paths;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+
 class ShortcodesManager
 {
     /**

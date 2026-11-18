@@ -7,6 +7,11 @@ namespace Fw\Core\Exceptions;
  
 use Exception;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+
 class General extends Exception
 {
     /**

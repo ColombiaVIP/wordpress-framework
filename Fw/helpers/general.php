@@ -1,4 +1,11 @@
 <?php
+
+// Este archivo lo incluye el autoload de Composer. exit solo si se abre directo,
+// para no cortar PHPUnit ni la consola antes de que exista ABSPATH.
+if ( ! defined( 'ABSPATH' ) && isset( $_SERVER['SCRIPT_FILENAME'] ) && realpath( (string) $_SERVER['SCRIPT_FILENAME'] ) === __FILE__ ) {
+	exit;
+}
+
 /**
  * Separa un string utilizando las letras en mayusculas.
  * Ejemplo: FrameworkWp

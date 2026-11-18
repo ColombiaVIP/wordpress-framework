@@ -8,6 +8,11 @@ namespace Fw;
 
 use Fw\Config\Apps;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+
 class Paths  
 {
     /** @var string $pluginFilePath Ruta del archivo principal de la aplicación. */
@@ -197,6 +202,7 @@ class Paths
             'routes' => self::buildPath($this->pluginPath, 'app', 'Controllers', 'Routes'),
             'menuPages' => self::buildPath($this->pluginPath, 'app', 'Controllers', 'MenuPages'),
             'shortcodes' => self::buildPath($this->pluginPath, 'app', 'Controllers', 'Shortcodes'),
+            'ajax' => self::buildPath($this->pluginPath, 'app', 'Controllers', 'Ajax'),
         ];
 
         $this->views = self::buildPath($this->pluginPath, 'app', 'views');

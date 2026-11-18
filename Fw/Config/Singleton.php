@@ -6,6 +6,11 @@
 
 namespace Fw\Config;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+
 class Singleton
 {
     /** @var array $instances Instancias del Singleton. */

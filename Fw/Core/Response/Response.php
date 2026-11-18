@@ -6,6 +6,11 @@
 
 namespace Fw\Core\Response;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+
 abstract class Response implements ResponseInterface
 {
     /** @var string $responseType Tipo de respuesta. */

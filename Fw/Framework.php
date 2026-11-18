@@ -16,6 +16,11 @@ use Fw\Init\Init;
 use Fw\Config\Apps;
 use Fw\Structures\BuildStructures;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+
 
 class Framework  
 { 

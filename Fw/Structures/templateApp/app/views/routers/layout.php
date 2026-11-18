@@ -1,7 +1,15 @@
-<?php getPart('header'); ?>
+<?php
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+getPart( 'header' );
+?>
 
 <div class="wpfw-layout">
-    <?=$content; ?>
+    <?php
+    // Fragmento HTML ya renderizado por view(). Las vistas hoja escapan sus datos.
+    echo $content ?? '';
+    ?>
 </div>
 
-<?php getPart('footer'); ?>
+<?php getPart( 'footer' ); ?>

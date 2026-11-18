@@ -3,6 +3,12 @@
 use Fw\Core\Response\ResponseAsset;
 use Fw\Paths;
 
+// Este archivo lo incluye el autoload de Composer. exit solo si se abre directo.
+if ( ! defined( 'ABSPATH' ) && isset( $_SERVER['SCRIPT_FILENAME'] ) && realpath( (string) $_SERVER['SCRIPT_FILENAME'] ) === __FILE__ ) {
+	exit;
+}
+
+
 if (!function_exists('asset')) {
     /**
      * Retorna una respuesta de tipo View.

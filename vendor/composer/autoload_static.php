@@ -20,6 +20,7 @@ class ComposerStaticInite4dbe638b99b562ed43b1e802e260206
         '0405aa5c075c79d4772cf8582505076f' => __DIR__ . '/../..' . '/Fw/helpers/assets.php',
         '7e39ca774128dbdb8f1a961769f82012' => __DIR__ . '/../..' . '/Fw/helpers/general.php',
         '01ff5d57004dfb55301d3590fc409035' => __DIR__ . '/../..' . '/Fw/helpers/views.php',
+        '750bd4f2983b53d8609fbcc7ca1a61bb' => __DIR__ . '/../..' . '/Fw/helpers/security.php',
     );
 
     public static $prefixLengthsPsr4 = array (

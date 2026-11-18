@@ -8,6 +8,11 @@ namespace Fw\Core\Response;
 
 use Fw\Core\Exceptions\General;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+
 class ResponseView extends Response
 {
     /**

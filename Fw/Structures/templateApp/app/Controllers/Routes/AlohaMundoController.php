@@ -1,4 +1,9 @@
 <?php
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Router
  * 
@@ -18,6 +23,14 @@ class AlohaMundoController
     
     /** @var bool $enableUri Habilita el uso de métodos por medio de url: tusitio.com/aloha-mundo/metodo */
     public static bool $enableUri = true;
+
+    /**
+     * Métodos invocables por URL, además de index y error404.
+     * Un método public que no esté aquí no se ejecuta, aunque enableUri sea true.
+     *
+     * @var list<string>
+     */
+    public static array $webActions = array( 'saludo' );
 
     # Constructor
     public function __construct ()

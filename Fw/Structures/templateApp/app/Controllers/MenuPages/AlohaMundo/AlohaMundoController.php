@@ -1,4 +1,9 @@
 <?php
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Menu Page principal 
  * 
@@ -8,6 +13,14 @@
 
 class AlohaMundoController
 {
+    /**
+     * saludo se abre con wpfw_admin_action_url( $page, 'saludo' ).
+     * Ese enlace trae el nonce _wpfw_nonce. Sin nonce la acción no corre.
+     *
+     * @var list<string>
+     */
+    public static array $webActions = array( 'saludo' );
+
     /**
      * Método defaul.
      * 
@@ -24,7 +37,7 @@ class AlohaMundoController
 
     /**
      * Método saludo.
-     * Adicionar a la ruta default: &option=saludo
+     * URL: wpfw_admin_action_url( $page, 'saludo' ).
      * 
      * @return Response
      */
@@ -48,7 +61,7 @@ class AlohaMundoController
         return view('layout', [
             'content' => view('404', [
                 'backText' => 'GO BACK',
-                'backLink' => menu_page_url($_GET['page'], false)
+                'backLink' => menu_page_url( isset( $_GET['page'] ) && is_string( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '', false )
             ]),
         ]);
     }

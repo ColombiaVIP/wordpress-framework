@@ -6,6 +6,11 @@
 
 namespace Fw\Init\Routing;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+
 class Route 
 {
     # URL

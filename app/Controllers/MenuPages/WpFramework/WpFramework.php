@@ -6,6 +6,11 @@
 
 namespace WordpressFramework\Controllers\MenuPages\WpFramework;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+
 class WpFramework
 {
 
@@ -63,7 +68,7 @@ class WpFramework
         return view('layout', [
             'content' => view('404', [
                 'backText' => 'GO MENU PAGE',
-                'backLink' => menu_page_url($_GET['page'], false)
+                'backLink' => menu_page_url( isset( $_GET['page'] ) && is_string( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '', false )
             ]),
         ]);
     }

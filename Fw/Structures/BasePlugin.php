@@ -7,6 +7,11 @@ namespace Fw\Structures;
 
 use Fw\Paths;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+
 class BasePlugin  
 {
     /**

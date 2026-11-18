@@ -9,6 +9,11 @@ use Fw\Paths;
 use Fw\Init\MenuPage\MenuPages;
 use Fw\Core\Request\Request;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+
 class MenuPagesManager  
 {
     /** @var array $args Argumentos de las Menu Page y las Sub Menu Pages. */
@@ -142,8 +147,9 @@ class MenuPagesManager
         # Menu Title
         $menuPage['menuTitle'] = Request::propertyExists($class, 'menuTitle') ? $class::$menuTitle : spaceUpper($controllerName);
 
-        # Capability
-        $menuPage['capability'] = Request::propertyExists($class, 'capability') ? $class::$capability : 'install_plugins';
+        # Capability. En un sitio normal el administrador tiene manage_options;
+        # install_plugins ocultaba el menú al administrador de un sitio en multisitio.
+        $menuPage['capability'] = Request::controllerCapability($class);
 
         # Slug
         $menuSlug = explode('\\', $class);

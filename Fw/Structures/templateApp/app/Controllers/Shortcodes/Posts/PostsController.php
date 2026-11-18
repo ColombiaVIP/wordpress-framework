@@ -1,4 +1,9 @@
 <?php
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * Shortcode para mostrar posts.
  */
@@ -7,26 +12,30 @@
 
 class PostsController
 {
+    /** @var string $type posts o pages. No se acepta otro valor. */
+    private string $type = 'posts';
+
+    /** @var int $limit */
+    private int $limit = 5;
+
     /**
-     * Constructor.
+     * El atributo type no elige un método: solo posts o pages.
      *
      * @param array $attrs Atributos del Shortcode.
-     * @return Exception|void
-     * @throws method_exists($this, $type)
      **/
     public function __construct(array $attrs)
     {
-        # Validación del tipo.
-        $type = ( array_key_exists('type', $attrs) && !empty($attrs['type']) ) ? $attrs['type'] : $type = 'posts';
-        # Validación del limite.
-        $limit = ( array_key_exists('limit', $attrs) && !empty($attrs['limit']) ) ? $attrs['limit'] : $limit = 5;
-
-        # Validación que la funcion relacionada al tipo, exista.
-        if ( !method_exists($this, $type) ) {
-            throw new \Exception('The type does not exist.');
+        $type = ( isset( $attrs['type'] ) && is_string( $attrs['type'] ) ) ? $attrs['type'] : 'posts';
+        if ( $type !== 'posts' && $type !== 'pages' ) {
+            throw new \Exception( 'The type does not exist.' );
         }
 
-        $this->type = $type;
+        $limit = ( isset( $attrs['limit'] ) && is_numeric( $attrs['limit'] ) ) ? (int) $attrs['limit'] : 5;
+        if ( $limit < 1 ) {
+            $limit = 1;
+        }
+
+        $this->type  = $type;
         $this->limit = $limit;
     }
     
@@ -39,8 +48,10 @@ class PostsController
     {
         unset( $attrs['type'] );
 
+        $items = $this->type === 'pages' ? $this->pages( $attrs ) : $this->posts( $attrs );
+
         return view('shortcodes/posts/posts', [
-            'posts' => $this->{$this->type}($attrs)
+            'posts' => $items,
         ]);
     }
 

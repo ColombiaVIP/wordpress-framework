@@ -1,124 +1,185 @@
 <?php
 /**
- * Se encarga de la interacción entre el sistema de enrutamiento y el resto de Wordpress
+ * Se encarga de la interacción entre el sistema de enrutamiento y el resto de WordPress.
  *
+ * Cada plugin conserva su processor. La plantilla no recorre $wp_filter:
+ * despacha al processor que reclamó esta petición.
  */
 
 namespace Fw\Init\Routing;
 
+use Fw\Core\Request\Actions;
 use Fw\Core\Request\Request;
 use Fw\Core\Request\RequestWeb;
+use Throwable;
+
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 class RoutingProcessor
 {
-    /** @var Route $matchedRoute La ruta coincidente encontrada por el router. */
-    private $matchedRoute;
-    /** @var Router $router */
-    private $router;
-    /** @var Route[] $routes Las rutas que queremos registrar en WordPress. */
-    private $routes;
-    /** @var RequestWeb $currentRequest El request actual para la ruta. */
-    public $currentRequest;
+	/** @var Route|null $matchedRoute La ruta coincidente encontrada por el router. */
+	private $matchedRoute = null;
 
-    public function __construct(Router $router, array $routes = array())
-    {
-        $this->router = $router;
-        $this->routes = $routes;
-    }
+	/** @var Router $router */
+	private $router;
 
-    /**
-     * Inicializar actions necesarios.
-     *
-     * @param Router  $router
-     * @param Route[] $routes
-     */
-    public static function init(Router $router, array $routes = array())
-    {
-        $self = new self($router, $routes);
+	/** @var Route[] $routes Las rutas que queremos registrar en WordPress. */
+	private $routes;
 
-        add_action('init', array($self, 'registerRoutes'));
-        add_action('parse_request', array($self, 'matchRequest'));
-        add_action('template_include', array($self, 'loadRouteController'));
-        
-    }
+	/** @var RequestWeb|null $currentRequest El request actual para la ruta. */
+	public $currentRequest = null;
 
-    /**
-     * Registrar todas las rutas.
-     * 
-     */
-    public function registerRoutes()
-    {
-        foreach ($this->routes as $name => $route) {
-            if ( $route->enableUri ) {
-                $this->router->addRuleEnableUri($name, $route);
-            }
-            $this->router->addRoute($name, $route);
-        }
-        
-        $this->router->compile();  
-        
-        $routesHash = md5(serialize($this->routes));
-        # Se validan cambios en las rutas
-        if ($routesHash != get_option($this->router->getRouteName() . '_routesHash')) {
-            flush_rewrite_rules();
-            update_option($this->router->getRouteName() . '_routesHash', $routesHash);
-        }
-    }
+	private bool $notFound = false;
 
-    /**
-     * Intenta hacer coincidir la solicitud actual con una ruta.
-     *
-     * @param WP $environment
-     */
-    public function matchRequest(\WP $environment)
-    {
-        $matchedRoute = $this->router->match($environment->query_vars);
+	/**
+	 * Processor que sí coincidió con la URL. La plantilla lo usa directo.
+	 */
+	private static ?self $current = null;
 
-        if ($matchedRoute instanceof Route) {
-            $this->matchedRoute = $matchedRoute;
-        }
+	public function __construct( Router $router, array $routes = array() )
+	{
+		$this->router = $router;
+		$this->routes = $routes;
+	}
 
-        if ($matchedRoute instanceof \WP_Error && in_array('route_not_found', $matchedRoute->get_error_codes())) {
-            wp_die($matchedRoute, 'Route Not Found', array('response' => 404));
-        }
-    }
+	/**
+	 * @param Route[] $routes
+	 */
+	public static function init( Router $router, array $routes = array() ): self
+	{
+		$self = new self( $router, $routes );
 
+		add_action( 'init', array( $self, 'registerRoutes' ) );
+		add_action( 'parse_request', array( $self, 'matchRequest' ) );
+		add_action( 'template_include', array( $self, 'loadRouteController' ) );
 
-    /**
-     * Comprueba si se ha encontrado a una ruta. 
-     * Si hay una, carga el controller para la ruta.
-     * Ejecuta el método enviado, el index(), el método error404() o la platilla 404 del tema respectivamente.
-     *
-     * @param string $template
-     * @return string
-     */
-    public function loadRouteController(string $template)
-    {
-        if (!$this->matchedRoute instanceof Route || !$this->matchedRoute->hasController()) {
-            return $template;
-        }
+		return $self;
+	}
 
-        $controller = $this->matchedRoute->getControllerName();
-        if ( class_exists($controller) ) {
-            $method = 'index';
-            if ( (bool) get_query_var('method') ) {
-                $method = get_query_var('method');
-            }
+	/**
+	 * Registra las reglas. No reescribe los permalinks: eso ocurre al activar el plugin.
+	 */
+	public function registerRoutes(): void
+	{
+		foreach ( $this->routes as $name => $route ) {
+			if ( $route->enableUri ) {
+				$this->router->addRuleEnableUri( $name, $route );
+			}
+			$this->router->addRoute( $name, $route );
+		}
 
-            # Ejecución del RequestWeb
-            $request = new RequestWeb(
-                $this->router->pluginPath,
-                $controller,
-                $method
-            );
-            $this->currentRequest = $request; // Guardar el request para template.php
+		$this->router->compile();
+	}
 
-            return \Fw\Paths::buildPath( __DIR__, 'template.php' );
-        }
+	/**
+	 * Intenta hacer coincidir la solicitud actual con una ruta.
+	 * Una ruta desconocida no corta la petición con wp_die.
+	 */
+	public function matchRequest( \WP $environment ): void
+	{
+		$matchedRoute = $this->router->match( $environment->query_vars );
 
-        return $template;
-    }
+		if ( $matchedRoute instanceof Route ) {
+			$this->matchedRoute = $matchedRoute;
+			$this->notFound     = false;
+			return;
+		}
 
+		$this->matchedRoute = null;
+		$this->notFound     = $matchedRoute instanceof \WP_Error
+			&& in_array( 'route_not_found', $matchedRoute->get_error_codes(), true );
+	}
 
+	/**
+	 * Si hay ruta, carga su controlador. El método de la URL solo se lee
+	 * cuando esa ruta tiene enableUri, y desde el query var del plugin.
+	 */
+	public function loadRouteController( string $template ): string
+	{
+		if ( $this->notFound ) {
+			if ( self::$current instanceof self ) {
+				return $template;
+			}
 
+			ThemeNotFound::mark();
+			$notFoundTemplate = ThemeNotFound::template();
+
+			return $notFoundTemplate !== '' ? $notFoundTemplate : $template;
+		}
+
+		if ( ! $this->matchedRoute instanceof Route || ! $this->matchedRoute->hasController() ) {
+			return $template;
+		}
+
+		$controller = $this->matchedRoute->getControllerName();
+		if ( ! class_exists( $controller ) ) {
+			return $template;
+		}
+
+		$method = 'index';
+		if ( $this->matchedRoute->enableUri ) {
+			$fromUri = get_query_var( $this->router->getMethodQueryVar() );
+			if ( is_string( $fromUri ) && $fromUri !== '' ) {
+				$method = $fromUri;
+			}
+		}
+
+		if ( ! Actions::isAllowed( $controller, $method ) ) {
+			if ( Actions::isAllowed( $controller, 'error404' ) ) {
+				$method = 'error404';
+			} else {
+				if ( ! self::$current instanceof self ) {
+					ThemeNotFound::mark();
+					$notFoundTemplate = ThemeNotFound::template();
+					if ( $notFoundTemplate !== '' ) {
+						return $notFoundTemplate;
+					}
+				}
+
+				return $template;
+			}
+		}
+
+		try {
+			$request = new RequestWeb(
+				$this->router->pluginPath,
+				$controller,
+				$method
+			);
+		} catch ( Throwable $e ) {
+			unset( $e );
+			ThemeNotFound::mark();
+			return $template;
+		}
+
+		$this->currentRequest = $request;
+		ThemeNotFound::clear();
+		self::$current = $this;
+
+		return \Fw\Paths::buildPath( __DIR__, 'template.php' );
+	}
+
+	public static function current(): ?self
+	{
+		return self::$current;
+	}
+
+	/**
+	 * Lo llama template.php. No mira $wp_filter.
+	 */
+	public static function dispatchCurrent(): void
+	{
+		$processor = self::$current;
+		if ( $processor instanceof self && $processor->currentRequest instanceof Request ) {
+			$processor->currentRequest->send();
+		}
+	}
+
+	public static function resetCurrent(): void
+	{
+		self::$current = null;
+		ThemeNotFound::reset();
+	}
 }

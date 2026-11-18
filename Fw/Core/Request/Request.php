@@ -8,6 +8,11 @@ namespace Fw\Core\Request;
 
 use ReflectionMethod;
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
+
 abstract class Request implements RequestInterface
 {
     /** @var string $pluginPath Ruta principal de la aplicación. */
@@ -22,8 +27,40 @@ abstract class Request implements RequestInterface
     public function __construct(string $pluginPath, ?string $controller = null, ?string $method = null)
     {
         $this->pluginPath = $pluginPath;
-        $this->setProperty('controller', $controller);
-        $this->setProperty('method', $method);
+        $this->controller = is_string( $controller ) ? $controller : '';
+        $this->method     = ( is_string( $method ) && $method !== '' ) ? $method : 'index';
+    }
+
+    /**
+     * Capability del controlador de menú. Si no declara una, manage_options.
+     */
+    public static function controllerCapability( string $controller ): string
+    {
+        if ( class_exists( $controller ) && property_exists( $controller, 'capability' ) ) {
+            $capability = $controller::$capability;
+            if ( is_string( $capability ) && $capability !== '' ) {
+                return $capability;
+            }
+        }
+
+        return 'manage_options';
+    }
+
+    /**
+     * Invoca el método. Si no declara parámetros, no se le pasa el array de la petición:
+     * en PHP 8 un argumento de más es un ArgumentCountError.
+     *
+     * @param array{0: object, 1: string} $callback
+     * @param list<mixed>                 $arguments
+     */
+    protected function invoke( array $callback, array $arguments = array() ): mixed
+    {
+        $reflection = new ReflectionMethod( $callback[0], $callback[1] );
+        if ( $reflection->getNumberOfParameters() === 0 ) {
+            $arguments = array();
+        }
+
+        return $reflection->invokeArgs( $callback[0], $arguments );
     }
     
     /**

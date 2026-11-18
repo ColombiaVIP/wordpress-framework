@@ -55,9 +55,12 @@ endif;
 
 if ( ! function_exists( 'wpfw_ajax_client_config' ) ) :
 	/**
-	 * Mapa listo para wp_localize_script: url, action y nonce de cada acción del plugin.
+	 * Mapa listo para wp_localize_script: url y, por cada acción del plugin que el
+	 * usuario actual puede ejecutar (anónima o con su capability), action, nonce,
+	 * anonimo y requiereNonce. Sirve igual para el modo automático (métodos public
+	 * de app/Controllers/Ajax) y para los controladores con $ajaxActions.
 	 *
-	 * @return array{url: string, actions: array<string, array{action: string, nonce: string}>}
+	 * @return array{url: string, actions: array<string, array{action: string, nonce: string, anonimo: bool, requiereNonce: bool}>}
 	 */
 	function wpfw_ajax_client_config( string $pluginSlug ): array
 	{

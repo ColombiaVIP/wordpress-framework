@@ -14,7 +14,7 @@ Leyenda: `[x]` completado, `[~]` parcial, `[ ]` pendiente.
 
 Cierre de seguridad para poder migrar un plugin de aplicación (cvip-loteria). Versión `1.4.0`.
 
-Decisión de César (18 nov 2026): el framework sigue siendo retrocompatible con 1.3.1. Todo método `public` es superficie pública (ruta con `enableUri`, shortcode `Clase@metodo`, `?option=` en menús) sin listas ni variables extra; lo interno se escribe `private`. Se revirtió la lista blanca `$webActions`/`#[WebAction]` del primer parche. La comprobación `isPublic` vuelve: `private`, `protected`, constructor, destructor y `__*` nunca se ejecutan; `__call` sigue atendiendo nombres desconocidos en rutas. Menús: `$capability` aplica a todos los métodos (por defecto `install_plugins`, con aviso si `WP_DEBUG`), `$capabilities` opcional por método y nonce opt-in con `$nonce`. El query var de método es por plugin (`{carpeta}_method`) y `method` se sigue aceptando; las reglas se regeneran una vez al actualizar. Hay capa AJAX opcional con lista blanca. `template.php` no recorre `$wp_filter`. Una ruta inexistente marca la 404 del tema. Los PHP del plugin cortan el acceso directo. El contrato está en el README.
+Decisión de César (18 nov 2026): el framework sigue siendo retrocompatible con 1.3.1. Todo método `public` es superficie pública (ruta con `enableUri`, shortcode `Clase@metodo`, `?option=` en menús) sin listas ni variables extra; lo interno se escribe `private`. Se revirtió la lista blanca `$webActions`/`#[WebAction]` del primer parche. La comprobación `isPublic` vuelve: `private`, `protected`, constructor, destructor y `__*` nunca se ejecutan; `__call` sigue atendiendo nombres desconocidos en rutas. Menús: `$capability` aplica a todos los métodos (por defecto `install_plugins`, con aviso si `WP_DEBUG`), `$capabilities` opcional por método y nonce opt-in con `$nonce`. El query var de método es por plugin (`{carpeta}_method`) y `method` se sigue aceptando; las reglas se regeneran una vez al actualizar. Hay capa AJAX opcional: todo método `public` escrito en un controlador de `app/Controllers/Ajax` es una acción, con `$capability`, `$capabilities` (`''` = anónimo) y `$nonce` como en los menús; `$ajaxActions` se dejó solo por compatibilidad (decisión de César, 18 nov 2026). `template.php` no recorre `$wp_filter`. Una ruta inexistente marca la 404 del tema. Los PHP del plugin cortan el acceso directo. El contrato está en el README.
 
 Sigue abierto: `in_footer` y el handle único de assets, el prefijo `wpfw_` de los helpers globales, la posición de menú 4, text domain, PHPCS, `readme.txt`, `uninstall.php`, PHPStan y GitHub Actions.
 
@@ -85,7 +85,7 @@ Quedó escrito en el README (versión 1.4.0), sección «Contrato de un plugin d
 - Un método `public` es superficie pública (ruta, shortcode, `option`) sin declararlo en ninguna lista. Lo interno va `private`/`protected`, que nunca se ejecuta desde fuera.
 - La vista hoja escapa sus datos. El hueco `$content` de un layout es HTML ya renderizado por `view()`.
 - Toda acción de menú pasa por `$capability` (todos los métodos) o `$capabilities[metodo]`. El nonce (`_wpfw_nonce`) es opt-in con `$nonce`; los enlaces y formularios del framework ya lo llevan.
-- Cada acción AJAX declara si es pública, su capability y su nonce. No hay includes a partir de la petición.
+- Cada acción AJAX toma su capability de `$capability`/`$capabilities` (`''` = anónima) y su nonce de `$nonce`. No hay includes a partir de la petición ni se exponen métodos heredados de fuera del plugin.
 
 ## Fase 1 — Cerrar el despacho y el HTML
 
@@ -162,4 +162,4 @@ Después de las fases 1 a 5.
 
 - [ ] Verbos HTTP, parámetros en la URL y factories para no hacer `new $clase` dentro del framework.
 - [ ] Dejar `dbout/wp-orm` como dependencia opcional: el `Model` actual solo añade `describe()`.
-- [x] Cuando el generador copie `templateApp`, el plugin resultante tiene que nacer ya con nonce, escape y la lista de acciones. Si el molde sigue el patrón inseguro, cada plugin nuevo hereda los hallazgos de la fase 1. El molde documenta que `public` es superficie pública, declara `$capability` con ejemplos de `$capabilities` y `$nonce`, escapa las vistas y trae un controlador AJAX con lista blanca.
+- [x] Cuando el generador copie `templateApp`, el plugin resultante tiene que nacer ya con nonce, escape y la lista de acciones. Si el molde sigue el patrón inseguro, cada plugin nuevo hereda los hallazgos de la fase 1. El molde documenta que `public` es superficie pública, declara `$capability` con ejemplos de `$capabilities` y `$nonce`, escapa las vistas y trae un controlador AJAX con `$capability`, `$capabilities` y `$nonce`.

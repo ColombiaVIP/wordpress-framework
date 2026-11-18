@@ -121,43 +121,58 @@ Recomendado para métodos que escriben o borran: `$nonce` + una capability concr
 
 ### AJAX
 
-Los controladores viven en `app/Controllers/Ajax`. No se incluye ningún archivo a partir de la petición: al iniciar, el framework lee la carpeta y registra solo las claves de `$ajaxActions`.
+Los controladores viven en `app/Controllers/Ajax`. No se incluye ningún archivo a partir de la petición: al iniciar, el framework lee la carpeta y registra como acción **cada método `public` escrito en el controlador**, igual que en rutas, menús y shortcodes. No hay listas. Lo interno se escribe `private` o `protected`.
+
+Los permisos se declaran como en las Menu Pages:
 
 ```php
 class PqrsController
 {
-    public static array $ajaxActions = [
-        'consultar' => [
-            'public' => true,   // también wp_ajax_nopriv_
-            'nonce'  => true,   // es el valor por defecto
-        ],
-        'registrar' => [
-            'public'     => false,
-            'capability' => 'manage_options', // por defecto si public es false
-            'nonce'      => true,
-        ],
+    public static $capability = 'edit_posts';        // todos los métodos
+
+    public static array $capabilities = [            // opcional, por método
+        'radicar'   => '',                           // '' = anónimo (wp_ajax_nopriv_)
+        'consultar' => '',
+        'borrar'    => 'manage_options',
     ];
 
-    public function consultar(): array
-    {
-        return ['ok' => true];
-    }
+    public static $nonce = ['radicar', 'borrar'];    // opt-in: true = todos
 
-    public function registrar(): array
-    {
-        return ['ok' => true];
-    }
+    public function radicar(): array   { return ['ok' => true]; }
+    public function consultar(): array { return ['ok' => true]; }
+    public function listar(): array    { return $this->filas(); }   // edit_posts
+    public function borrar(): array    { return ['ok' => true]; }
+
+    private function filas(): array { return []; }  // no es acción
 }
 ```
 
+Qué se registra:
+
+- Métodos `public`, no `static`, no abstractos, que no sean constructor, destructor ni `__*`.
+- Solo los escritos en el plugin: la clase que declara el método (o el trait del que sale) tiene que estar en el namespace del plugin. Un controlador base propio del plugin aporta sus métodos `public`; lo heredado del framework (`Fw\…`), de `vendor` o de WordPress no se expone aunque sea `public`.
+- Los métodos `static public` no son acciones: sirven de ayudantes.
+
+Permisos de cada método:
+
+1. `$capabilities['metodo']` si existe (sin distinguir mayúsculas).
+2. Si no, `$capability` del controlador.
+3. Si el controlador no declara `$capability`: `install_plugins`, solo con sesión, y aviso en el admin si `WP_DEBUG`.
+
+Una capability `''` (cadena vacía) hace la acción **anónima**: se registra también en `wp_ajax_nopriv_` y no se llama a `current_user_can`. `$capability = ''` abre todos los métodos del controlador salvo los que `$capabilities` cierre. Ojo: en las Menu Pages `''` significa «por defecto»; en AJAX significa «anónimo», a propósito y de forma explícita. Una capability con caracteres raros se trata como `install_plugins`.
+
+`$nonce` es opt-in, igual que en los menús: `true` para todos los métodos o la lista de los que lo exigen. Recomendado en todo lo que escribe, también en lo anónimo (formularios).
+
+Si dos controladores del mismo plugin tienen un método con el mismo nombre comparten gancho: gana el primero por orden alfabético de archivo y, con `WP_DEBUG`, se avisa.
+
 Para el slug `cvip-loteria` la petición a `admin-ajax.php` lleva:
 
-- `action` = `cvip_loteria_consultar` (`wpfw_ajax_hook('cvip-loteria', 'consultar')`)
-- `_ajax_nonce` = `wpfw_ajax_nonce('cvip-loteria', 'consultar')`
+- `action` = `cvip_loteria_radicar` (`wpfw_ajax_hook('cvip-loteria', 'radicar')`)
+- `_ajax_nonce` = `wpfw_ajax_nonce('cvip-loteria', 'radicar')`
 
-`wpfw_ajax_client_config('cvip-loteria')` devuelve la URL, el `action` y el nonce de cada acción para `wp_localize_script`. El método tiene que ser `public`, sin argumentos obligatorios, y puede devolver un array: se responde con `wp_send_json_success`. Un método que no esté en `$ajaxActions` no tiene gancho, aunque sea `public`.
+`wpfw_ajax_client_config('cvip-loteria')` devuelve la URL y, por cada acción que el usuario actual puede ejecutar (anónima o con su capability), `action`, `nonce`, `anonimo` y `requiereNonce`, listo para `wp_localize_script`. Un visitante solo recibe las acciones anónimas. El método no debe tener argumentos obligatorios y puede devolver un array: se responde con `wp_send_json_success`.
 
-Por defecto una acción no es pública, exige nonce y, si no es pública, exige `manage_options`. Poner `'nonce' => false` es una decisión explícita.
+**Compatibilidad con `$ajaxActions`.** Un controlador que todavía declara `$ajaxActions` funciona como antes: solo se registran las claves listadas, con sus `public`, `capability` y `nonce` (por defecto no pública, con nonce y `manage_options`), y se ignoran `$capability`, `$capabilities` y `$nonce` para ese controlador. Para pasar al modo nuevo basta con borrar `$ajaxActions` y declarar los permisos como arriba; en el mismo plugin pueden convivir controladores de los dos modos.
 
 ### Clases auxiliares: `Publicos/` u otras carpetas
 
@@ -187,7 +202,7 @@ No hay que tocar código. Cambios visibles:
 
 ### Nota para cvip-loteria
 
-PQRS, contratos y documentos pueden ser rutas con `enableUri`: sus métodos `public` son lo que el visitante abre; lo interno va `private`. Lo que modifica datos en el admin va por `option` con `$nonce` y `$capabilities`, o por AJAX con `public`, `capability` y `nonce` declarados en `$ajaxActions`.
+PQRS, contratos y documentos pueden ser rutas con `enableUri`: sus métodos `public` son lo que el visitante abre; lo interno va `private`. Lo que modifica datos en el admin va por `option` con `$nonce` y `$capabilities`, o por AJAX en `app/Controllers/Ajax` con `$capability`, `$capabilities` (`''` para el formulario anónimo de PQRS) y `$nonce`.
 
 ---
 ### Changelog
@@ -206,8 +221,10 @@ Endurecimiento retrocompatible: un plugin hecho con 1.3.1 funciona sin cambios.
 * `template.php` despacha al processor que coincidió con la petición y no recorre los filtros globales. Dos plugins no se pisan.
 * Una ruta inexistente o un `Throwable` en el controlador caen en la 404 del tema en lugar de `wp_die`.
 * Los PHP del plugin cortan el acceso directo si no existe `ABSPATH`.
-* AJAX opcional en `app/Controllers/Ajax`: `$ajaxActions` declara `public`, `capability` y `nonce`. El gancho es `{slug}_{metodo}`.
-* Pruebas PHPUnit con Brain Monkey: despacho público por defecto, private/protected, `__call`, capability, `$capabilities`, nonce opt-in, escape, aislamiento, AJAX, shortcode, assets y `Model::describe()`.
+* AJAX opcional en `app/Controllers/Ajax`: todo método `public` escrito en el controlador es una acción con gancho `{slug}_{metodo}`, sin listas. Permisos como en los menús: `$capability` para todo el controlador, `$capabilities` por método y `$nonce` opt-in. Capability `''` = acción anónima (`wp_ajax_nopriv_`). Sin `$capability`: `install_plugins` y aviso con `WP_DEBUG`. No se exponen métodos `static`, `__*` ni heredados de clases o traits fuera del plugin.
+* `$ajaxActions` (de la primera versión de esta capa) sigue funcionando igual en los controladores que lo declaran.
+* `wpfw_ajax_client_config()` solo entrega las acciones que el usuario actual puede ejecutar e indica `anonimo` y `requiereNonce`.
+* Pruebas PHPUnit con Brain Monkey: despacho público por defecto, private/protected, `__call`, capability, `$capabilities`, nonce opt-in, escape, aislamiento, AJAX (métodos public, herencia, capability, `$capabilities`, anónimo, nonce y `$ajaxActions`), shortcode, assets y `Model::describe()`.
 
 ## [1.3.1] 20260928:
 

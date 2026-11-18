@@ -159,6 +159,20 @@ Para el slug `cvip-loteria` la petición a `admin-ajax.php` lleva:
 
 Por defecto una acción no es pública, exige nonce y, si no es pública, exige `manage_options`. Poner `'nonce' => false` es una decisión explícita.
 
+### Clases auxiliares: `Publicos/` u otras carpetas
+
+El framework solo despacha `Routes/`, `MenuPages/`, `Shortcodes/` y `Ajax/`. Cualquier otra carpeta bajo `app/Controllers` (por ejemplo `Publicos/`, como en ingeurbe) no se enruta ni se registra: es un namespace normal que se puede instanciar desde una ruta, un menú, un shortcode o un controlador AJAX.
+
+```php
+public function index()
+{
+    $listado = new \Proyectos\Controllers\Publicos\ListadoProyectosController;
+    return view('layoutHead', ['content' => $listado->vListado(['baseUrl' => site_url()])]);
+}
+```
+
+Importante: `$capability`, `$capabilities` y `$nonce` se aplican al controlador por el que entra la petición, no a la clase que se instancia a mano. Si el método auxiliar hace algo sensible, la verificación va en el controlador de entrada (o dentro del auxiliar con `current_user_can` / `check_admin_referer`).
+
 ### Vistas
 
 En la hoja se escapa cada dato: `esc_html` para texto, `esc_attr` para atributos, `esc_url` para enlaces. El `$content` de un layout es HTML que ya devolvió `view()`. No se vuelve a escapar.

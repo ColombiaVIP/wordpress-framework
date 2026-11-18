@@ -14,12 +14,30 @@ if ( ! defined( 'ABSPATH' ) ) {
 class AlohaMundoController
 {
     /**
-     * saludo se abre con wpfw_admin_action_url( $page, 'saludo' ).
-     * Ese enlace trae el nonce _wpfw_nonce. Sin nonce la acción no corre.
+     * Quién puede entrar a esta Menu Page y ejecutar TODOS sus métodos public
+     * (index, saludo y cualquier otro que se llame con ?page=…&option=metodo).
+     * Si falta, se usa install_plugins.
+     */
+    public static $capability = 'manage_options';
+
+    /**
+     * Opcional: capability distinta para métodos concretos. Los demás usan $capability.
+     *
+     * @var array<string, string>
+     */
+    public static array $capabilities = array(
+        // 'borrar' => 'delete_posts',
+    );
+
+    /**
+     * Opcional: métodos que exigen nonce (_wpfw_nonce). Los enlaces de ListTableController,
+     * FormController y wpfw_admin_action_url( $page, 'metodo' ) ya lo incluyen.
      *
      * @var list<string>
      */
-    public static array $webActions = array( 'saludo' );
+    public static array $nonce = array(
+        // 'borrar',
+    );
 
     /**
      * Método defaul.
@@ -36,8 +54,8 @@ class AlohaMundoController
     }
 
     /**
-     * Método saludo.
-     * URL: wpfw_admin_action_url( $page, 'saludo' ).
+     * Método saludo. Es public, así que responde a ?page=…&option=saludo
+     * (o wpfw_admin_action_url( $page, 'saludo' )) sin declararlo en ninguna lista.
      * 
      * @return Response
      */

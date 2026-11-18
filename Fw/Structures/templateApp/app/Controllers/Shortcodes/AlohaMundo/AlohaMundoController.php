@@ -13,13 +13,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class AlohaMundoController
 {
-    /**
-     * saludo solo responde si está en esta lista.
-     * Shortcode: [tag Alohamundo=AlohaMundo@saludo]
-     *
-     * @var list<string>
-     */
-    public static array $webActions = array( 'saludo' );
+    # Cada método public se puede usar desde un shortcode:
+    # [tag Alohamundo=AlohaMundo@saludo]. Lo interno va en private.
 
     /**
      * Método defaul.

@@ -42,25 +42,26 @@ class RequestWeb extends Request
 	}
 
 	/**
-	 * Solo corre un método public que esté en la lista blanca.
-	 * Si el método no está permitido y el controlador ofrece error404, se usa ese.
-	 * Si no, se devuelve la plantilla 404 del tema.
+	 * Comprobación isPublic (estaba comentada en 1.3.1).
+	 *
+	 * - Cualquier método public del controlador se ejecuta, sin declararlo en ninguna lista.
+	 * - private, protected, constructor, destructor y nombres que empiezan por "__" nunca se ejecutan.
+	 * - Un nombre que no existe lo atiende __call si el controlador lo tiene (como en 1.3.1).
+	 * - Si no, error404() del controlador; y si no lo tiene, la plantilla 404 del tema.
 	 *
 	 * @return array{0: object, 1: string}|string|null
 	 */
 	public function validations(): array|string|null
 	{
 		$controller = $this->getController();
-		$method     = Actions::sanitizeIdentifier( $this->getMethod() ) ?? '';
+		$method     = Actions::resolve( $controller, $this->getMethod(), true );
 
-		if ( $method === '' || ! Actions::isAllowed( $controller, $method ) ) {
-			if ( $method !== 'error404' && Actions::isAllowed( $controller, 'error404' ) ) {
-				$method = 'error404';
-			} else {
-				$template = ThemeNotFound::template();
-				return $template !== '' ? $template : null;
-			}
+		if ( $method === null ) {
+			$template = ThemeNotFound::template();
+			return $template !== '' ? $template : null;
 		}
+
+		$this->method = $method;
 
 		return array(
 			new $controller(),

@@ -36,6 +36,7 @@ abstract class FrameworkTestCase extends TestCase
 		$GLOBALS['wpfw_json']                 = null;
 		$GLOBALS['wpfw_can']                  = true;
 		$GLOBALS['wpfw_caps']                 = array();
+		$GLOBALS['wpfw_test_options']         = array();
 
 		$_GET     = array();
 		$_POST    = array();

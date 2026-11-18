@@ -59,7 +59,9 @@ class RoutingProcessor
 	}
 
 	/**
-	 * Registra las reglas. No reescribe los permalinks: eso ocurre al activar el plugin.
+	 * Registra las reglas. Como en 1.3.1, si las rutas cambian (o cambia el formato de las reglas
+	 * del framework) se regeneran los permalinks una vez; ahora en wp_loaded, cuando todos
+	 * los plugins ya registraron sus reglas. También se regeneran al activar el plugin.
 	 */
 	public function registerRoutes(): void
 	{
@@ -71,6 +73,38 @@ class RoutingProcessor
 		}
 
 		$this->router->compile();
+
+		if ( function_exists( 'get_option' ) && $this->routesHash() !== get_option( $this->hashOption() ) ) {
+			add_action( 'wp_loaded', array( $this, 'flushIfChanged' ) );
+		}
+	}
+
+	/**
+	 * Regenera los permalinks si el hash de las rutas cambió.
+	 */
+	public function flushIfChanged(): void
+	{
+		$hash = $this->routesHash();
+		if ( $hash === get_option( $this->hashOption() ) ) {
+			return;
+		}
+
+		flush_rewrite_rules();
+		update_option( $this->hashOption(), $hash );
+	}
+
+	private function hashOption(): string
+	{
+		return $this->router->getRouteName() . '_routesHash';
+	}
+
+	/**
+	 * Incluye el query var de método: al pasar de 1.3.1 (method) a la versión por plugin
+	 * las reglas guardadas se regeneran solas una vez.
+	 */
+	private function routesHash(): string
+	{
+		return md5( serialize( $this->routes ) . '|' . $this->router->getMethodQueryVar() );
 	}
 
 	/**
@@ -120,27 +154,31 @@ class RoutingProcessor
 
 		$method = 'index';
 		if ( $this->matchedRoute->enableUri ) {
+			// Query var del plugin; "method" se sigue leyendo por compatibilidad con 1.3.1
+			// (reglas viejas aún sin regenerar y enlaces ?method=).
 			$fromUri = get_query_var( $this->router->getMethodQueryVar() );
+			if ( ! is_string( $fromUri ) || $fromUri === '' ) {
+				$fromUri = get_query_var( Router::LEGACY_METHOD_VAR );
+			}
 			if ( is_string( $fromUri ) && $fromUri !== '' ) {
 				$method = $fromUri;
 			}
 		}
 
-		if ( ! Actions::isAllowed( $controller, $method ) ) {
-			if ( Actions::isAllowed( $controller, 'error404' ) ) {
-				$method = 'error404';
-			} else {
-				if ( ! self::$current instanceof self ) {
-					ThemeNotFound::mark();
-					$notFoundTemplate = ThemeNotFound::template();
-					if ( $notFoundTemplate !== '' ) {
-						return $notFoundTemplate;
-					}
+		// Métodos public, __call para nombres desconocidos, o error404.
+		$resolved = Actions::resolve( $controller, $method, true );
+		if ( $resolved === null ) {
+			if ( ! self::$current instanceof self ) {
+				ThemeNotFound::mark();
+				$notFoundTemplate = ThemeNotFound::template();
+				if ( $notFoundTemplate !== '' ) {
+					return $notFoundTemplate;
 				}
-
-				return $template;
 			}
+
+			return $template;
 		}
+		$method = $resolved;
 
 		try {
 			$request = new RequestWeb(

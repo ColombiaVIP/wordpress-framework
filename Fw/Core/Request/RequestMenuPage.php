@@ -45,45 +45,54 @@ class RequestMenuPage extends Request
 	}
 
 	/**
-	 * Capability, lista blanca y nonce cuando llega option.
+	 * Resuelve el método (option o el de la Menu Page) y aplica, en este orden:
+	 *
+	 * 1. Solo métodos public (sin lista blanca). private/protected/mágicos caen en error404.
+	 * 2. Capability del método: $capabilities[metodo] o, si no aparece, $capability
+	 *    (la misma que usa add_menu_page). Sin permiso: error404 del controlador o 403.
+	 * 3. Nonce solo si el controlador lo pide en $nonce (opt-in, los enlaces viejos siguen sirviendo).
 	 *
 	 * @return array{0: object, 1: string}|null
 	 */
 	public function validations(): ?array
 	{
 		$controller = $this->getController();
-		$capability = self::controllerCapability( $controller );
-
-		if ( ! current_user_can( $capability ) ) {
-			$this->deny( 403, 'No tienes permiso para ejecutar esta acción.' );
+		if ( ! class_exists( $controller ) ) {
+			$this->deny( 404, 'La acción no está disponible.' );
 			return null;
 		}
 
-		$method = Actions::sanitizeIdentifier( $this->getMethod() ) ?? 'index';
-		$option = null;
-
+		$requested = $this->getMethod();
+		$option    = null;
 		if ( isset( $_GET['option'] ) && is_string( $_GET['option'] ) && $_GET['option'] !== '' ) {
-			$option = Actions::sanitizeIdentifier( wp_unslash( $_GET['option'] ) );
-			if ( $option === null ) {
-				$this->deny( 404, 'La acción no está disponible.' );
-				return null;
-			}
-			$method = $option;
+			$option    = wp_unslash( $_GET['option'] );
+			$requested = $option;
 		}
 
-		if ( ! Actions::isAllowed( $controller, $method ) ) {
-			if ( $method !== 'error404' && Actions::isAllowed( $controller, 'error404' ) ) {
+		$method = Actions::resolve( $controller, $requested );
+		if ( $method === null ) {
+			$this->deny( 404, 'La acción no está disponible.' );
+			return null;
+		}
+
+		if ( ! current_user_can( Actions::capabilityFor( $controller, $method ) ) ) {
+			// error404 solo si el usuario sí puede verlo (capability general del controlador).
+			if (
+				$method !== 'error404'
+				&& Actions::isPublicAction( $controller, 'error404' )
+				&& current_user_can( Actions::capabilityFor( $controller, 'error404' ) )
+			) {
 				$method = 'error404';
 			} else {
-				$this->deny( 404, 'La acción no está disponible.' );
+				$this->deny( 403, 'No tienes permiso para ejecutar esta acción.' );
 				return null;
 			}
 		}
 
-		if ( $option !== null ) {
+		if ( $option !== null && $method !== 'error404' && Actions::requiresNonce( $controller, $method ) ) {
 			$page = AdminActions::currentPage();
-			if ( $page === null || ! AdminActions::verify( $page, $option ) ) {
-				$this->deny( 403, 'El nonce no es válido.' );
+			if ( $page === null || ! AdminActions::verify( $page, $method ) ) {
+				$this->deny( 403, 'El enlace caducó o no es válido. Vuelve a la página e inténtalo de nuevo.' );
 				return null;
 			}
 		}

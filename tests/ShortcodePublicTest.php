@@ -1,6 +1,7 @@
 <?php
 /**
- * El shortcode solo ejecuta métodos de la lista y la categoría es un identificador.
+ * El shortcode ejecuta cualquier método public (como 1.3.1); nunca private, protected ni mágicos.
+ * La categoría, la clase y el método tienen que ser identificadores.
  */
 
 declare(strict_types=1);
@@ -10,7 +11,7 @@ namespace Fw\Tests;
 use Fw\Config\Apps;
 use Fw\Core\Request\RequestShortcode;
 
-class ShortcodeAllowlistTest extends FrameworkTestCase
+class ShortcodePublicTest extends FrameworkTestCase
 {
 	private string $root = '';
 
@@ -29,7 +30,7 @@ class ShortcodeAllowlistTest extends FrameworkTestCase
 		parent::tearDown();
 	}
 
-	public function test_clase_arroba_metodo_no_ejecuta_un_metodo_publico_sin_declarar(): void
+	public function test_clase_arroba_metodo_ejecuta_cualquier_metodo_public_y_nada_mas(): void
 	{
 		$this->root = sys_get_temp_dir() . '/wpfw-short-' . uniqid( '', true );
 		mkdir( $this->root . '/Posts', 0777, true );
@@ -53,9 +54,21 @@ class ShortcodeAllowlistTest extends FrameworkTestCase
 
 		$shortcode = new RequestShortcode( 'demo-short' );
 
+		// Public sin declarar: corre.
 		$GLOBALS['wpfw_short'] = '';
-		self::assertSame( '', $shortcode->prepare( array( 'Posts' => 'Posts@secreto' ) ) );
-		self::assertSame( '', $GLOBALS['wpfw_short'] );
+		$shortcode->prepare( array( 'Posts' => 'Posts@saludo' ) );
+		self::assertSame( 'saludo', $GLOBALS['wpfw_short'] );
+
+		// Sin @metodo: index.
+		$shortcode->prepare( array( 'Posts' => 'Posts' ) );
+		self::assertSame( 'index', $GLOBALS['wpfw_short'] );
+
+		// private y protected: no corren (sin error404 no se imprime nada).
+		foreach ( array( 'oculto', 'protegido', 'no_existe' ) as $metodo ) {
+			$GLOBALS['wpfw_short'] = '';
+			$shortcode->prepare( array( 'Posts' => 'Posts@' . $metodo ) );
+			self::assertSame( '', $GLOBALS['wpfw_short'], $metodo );
+		}
 
 		self::assertNull( $shortcode->prepare( array( '../X' => 'Posts@saludo' ) ) );
 		self::assertArrayNotHasKey( 'wpfw_canario', $GLOBALS );
@@ -63,8 +76,9 @@ class ShortcodeAllowlistTest extends FrameworkTestCase
 		self::assertNull( $shortcode->prepare( array( 'Posts' => 'Posts@__construct' ) ) );
 		self::assertSame( '', $GLOBALS['wpfw_short'] );
 
-		$shortcode->prepare( array( 'Posts' => 'Posts@saludo', 'type' => 'posts' ) );
-		self::assertSame( 'saludo', $GLOBALS['wpfw_short'] );
+		// Los demás atributos llegan completos al controlador, como en 1.3.1.
+		$shortcode->prepare( array( 'Posts' => 'Posts@atributos', 'type' => 'posts', 'data-id' => '7', 0 => 'suelto' ) );
+		self::assertSame( array( 'type' => 'posts', 'data-id' => '7', 0 => 'suelto' ), $GLOBALS['wpfw_short'] );
 
 		unlink( $canario );
 	}
@@ -77,8 +91,6 @@ namespace ShortDemo\Controllers\Shortcodes\Posts;
 
 class PostsController
 {
-    public static array $webActions = ['saludo'];
-
     public function __construct(array $params = [])
     {
     }
@@ -93,9 +105,19 @@ class PostsController
         $GLOBALS['wpfw_short'] = 'saludo';
     }
 
-    public function secreto(): void
+    public function atributos(array $params): void
     {
-        $GLOBALS['wpfw_short'] = 'secreto';
+        $GLOBALS['wpfw_short'] = $params;
+    }
+
+    private function oculto(): void
+    {
+        $GLOBALS['wpfw_short'] = 'oculto';
+    }
+
+    protected function protegido(): void
+    {
+        $GLOBALS['wpfw_short'] = 'protegido';
     }
 }
 PHP;

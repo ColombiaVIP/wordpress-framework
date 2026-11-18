@@ -32,18 +32,11 @@ abstract class Request implements RequestInterface
     }
 
     /**
-     * Capability del controlador de menú. Si no declara una, manage_options.
+     * Capability del controlador de menú. Si no declara una, install_plugins (igual que 1.3.1).
      */
     public static function controllerCapability( string $controller ): string
     {
-        if ( class_exists( $controller ) && property_exists( $controller, 'capability' ) ) {
-            $capability = $controller::$capability;
-            if ( is_string( $capability ) && $capability !== '' ) {
-                return $capability;
-            }
-        }
-
-        return 'manage_options';
+        return Actions::controllerCapability( $controller );
     }
 
     /**

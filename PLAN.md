@@ -14,7 +14,7 @@ Leyenda: `[x]` completado, `[~]` parcial, `[ ]` pendiente.
 
 Cierre de seguridad para poder migrar un plugin de aplicación (cvip-loteria). Versión `1.4.0`.
 
-El despacho ya no trata un método `public` como ruta. Cada controlador declara `$webActions` (o el atributo `#[WebAction]`). `index` y `error404` siguen permitidos. El query var `method` global desaparece: con `enableUri` el segmento vive en `{carpeta}_method`. Las acciones de menú (`option`) exigen nonce y capability (`manage_options` si la clase no dice otra). Hay capa AJAX con lista blanca. `template.php` no recorre `$wp_filter`. Una ruta inexistente marca la 404 del tema. `flush_rewrite_rules` corre al activar el plugin. Los PHP del plugin cortan el acceso directo. El contrato para quien arme el plugin de Lotería está en el README.
+Decisión de César (18 nov 2026): el framework sigue siendo retrocompatible con 1.3.1. Todo método `public` es superficie pública (ruta con `enableUri`, shortcode `Clase@metodo`, `?option=` en menús) sin listas ni variables extra; lo interno se escribe `private`. Se revirtió la lista blanca `$webActions`/`#[WebAction]` del primer parche. La comprobación `isPublic` vuelve: `private`, `protected`, constructor, destructor y `__*` nunca se ejecutan; `__call` sigue atendiendo nombres desconocidos en rutas. Menús: `$capability` aplica a todos los métodos (por defecto `install_plugins`, con aviso si `WP_DEBUG`), `$capabilities` opcional por método y nonce opt-in con `$nonce`. El query var de método es por plugin (`{carpeta}_method`) y `method` se sigue aceptando; las reglas se regeneran una vez al actualizar. Hay capa AJAX opcional con lista blanca. `template.php` no recorre `$wp_filter`. Una ruta inexistente marca la 404 del tema. Los PHP del plugin cortan el acceso directo. El contrato está en el README.
 
 Sigue abierto: `in_footer` y el handle único de assets, el prefijo `wpfw_` de los helpers globales, la posición de menú 4, text domain, PHPCS, `readme.txt`, `uninstall.php`, PHPStan y GitHub Actions.
 
@@ -50,11 +50,11 @@ Completados en código:
 
 ### Crítico
 
-1. **[x] Completado en 1.4.0. Cualquier método público de una ruta se puede invocar sin comprobar visibilidad.** `RequestWeb::validations`, `Router::compile`. La comprobación `isPublic` está comentada. El query var `method` se registra siempre, así que `?method=accion` ejecuta el método aunque `enableUri` sea `false`. No hay autenticación ni nonce en el front.
+1. **[x] Completado en 1.4.0. Cualquier método público de una ruta se puede invocar sin comprobar visibilidad.** `RequestWeb::validations`, `Router::compile`. La comprobación `isPublic` está comentada. El query var `method` se registra siempre, así que `?method=accion` ejecuta el método aunque `enableUri` sea `false`. No hay autenticación ni nonce en el front. *Resolución (18 nov):* vuelve `isPublic` (private/protected/mágicos nunca) y `?method=` solo cuenta si la ruta tiene `enableUri`; los métodos `public` siguen siendo públicos por diseño.
 
 ### Alto
 
-2. **[x] Completado en 1.4.0. Las acciones de administración viajan por GET sin nonce.** `RequestMenuPage`, `FormController`, `ListTableController`. `option`, `page` y los enlaces de editar/borrar se arman con `$_GET` / `$_REQUEST`. Un admin autenticado puede dispararlas por CSRF. Los formularios generados tampoco incluyen `wp_nonce_field`.
+2. **[~] Parcial (opt-in) en 1.4.0. Las acciones de administración viajan por GET sin nonce.** *Resolución (18 nov):* el nonce no es obligatorio para no romper enlaces viejos; cada controlador lo activa con `$nonce` y endurece con `$capabilities`. Los enlaces y formularios del framework ya lo traen. `RequestMenuPage`, `FormController`, `ListTableController`. `option`, `page` y los enlaces de editar/borrar se arman con `$_GET` / `$_REQUEST`. Un admin autenticado puede dispararlas por CSRF. Los formularios generados tampoco incluyen `wp_nonce_field`.
 3. **[x] Completado en 1.4.0. La salida HTML no se escapa.** `printVars` ya no concatena claves crudas; el resto de vistas y formularios sigue sin escapar. `HTMLController`, `layout.php`, `ListTableController`, `printVars`. Nombres, valores, clases y celdas se imprimen con `<?= ?>`. `ListTable` refleja `page` y datos de fila. `printVars` concatena claves en JavaScript.
 4. **[x] Completado en 1.4.0. Un shortcode ejecuta cualquier método público de su carpeta.** `RequestShortcode::prepare`. Quien pueda guardar el shortcode elige `Categoria=Clase@metodo` y pasa atributos al constructor. La categoría solo pasa por `sanitize_text_field`, que no limita el nombre a un identificador.
 5. **[x] Completado en 1.4.0. La plantilla de ruta no distingue qué plugin respondió.** `Fw/Init/Routing/template.php`. Recorre `$wp_filter` y usa el primer `RoutingProcessor`. Con dos plugins del framework, la URL de uno puede ejecutar el request del otro.
@@ -64,7 +64,7 @@ Completados en código:
 
 7. **[x] Completado en 1.4.0. `flush_rewrite_rules` corre en `init` y el tag `method` es global.** `RoutingProcessor::registerRoutes`, `Router::compile`. Cada cambio de hash reescribe las reglas en caliente, también para visitantes. El tag `%method%` choca con cualquier otro plugin que use ese query var.
 8. **[~] Parcial. La carga selectiva de assets está rota y es incondicional.** `LoadAssets::loadAsset`. Los casos `js` y `css` ya usan `$this->args`. Sigue pendiente honrar `in_footer` (la config pide `false` y hoy los scripts cargan en el footer; cambiarlo los movería al head), la carga en cada página y el handle único.
-9. **[~] Parcial. La capability por defecto es `install_plugins` y la posición es 4.** La capability por defecto pasó a `manage_options`. La posición sigue en 4. `MenuPagesManager::prepareMenuPage`. En multisitio el menú queda oculto para administradores de sitio. La posición 4 compite con los menús nativos de WordPress.
+9. **[~] Parcial. La capability por defecto es `install_plugins` y la posición es 4.** La capability por defecto sigue en `install_plugins` por compatibilidad (decisión 18 nov 2026); con `WP_DEBUG` se avisa qué Menu Page no declara `$capability`. La posición sigue en 4. `MenuPagesManager::prepareMenuPage`. En multisitio el menú queda oculto para administradores de sitio. La posición 4 compite con los menús nativos de WordPress.
 10. **[~] Parcial. Helpers en el espacio global, sin prefijo ni `function_exists`.** `spaceUpper`, `strToSlug` y `routeUrl` ya tienen `function_exists`. Sigue pendiente el prefijo `wpfw_` (renombrarlos rompería las llamadas actuales) y sacar `getHeader` / `getFooter` del guard de `getPart`.
 11. **[x] Completado. Versión, licencia y metadatos de Composer no coinciden.** `WPFW_VERSION` sale de la cabecera `Version` (ahora `1.3.1`). Composer usa `colombiavip/wordpress-framework`, licencia `GPL-2.0-or-later` y la descripción ya no trae bytes nulos.
 12. **[x] Completado. `array_search` trata el índice 0 como fallo.** `MenuPagesManager::prepare` compara el resultado con `!== false`.
@@ -82,18 +82,18 @@ Completados en código:
 
 Quedó escrito en el README (versión 1.4.0), sección «Contrato de un plugin de aplicación». Resumen:
 
-- Un método `public` no es una ruta. Solo lo es si está en `$webActions` o lleva `#[WebAction]`. `index` y `error404` van implícitos.
+- Un método `public` es superficie pública (ruta, shortcode, `option`) sin declararlo en ninguna lista. Lo interno va `private`/`protected`, que nunca se ejecuta desde fuera.
 - La vista hoja escapa sus datos. El hueco `$content` de un layout es HTML ya renderizado por `view()`.
-- Toda acción de menú que llega con `option` lleva nonce (`_wpfw_nonce`) y la capability del controlador.
+- Toda acción de menú pasa por `$capability` (todos los métodos) o `$capabilities[metodo]`. El nonce (`_wpfw_nonce`) es opt-in con `$nonce`; los enlaces y formularios del framework ya lo llevan.
 - Cada acción AJAX declara si es pública, su capability y su nonce. No hay includes a partir de la petición.
 
 ## Fase 1 — Cerrar el despacho y el HTML
 
 Bloqueante. Hacerla antes de cualquier otra fase.
 
-- [x] Restaurar la comprobación `isPublic` en `RequestWeb` y limitar los métodos de ruta a una lista explícita (`index`, `error404` y los que la clase declare).
-- [x] Quitar el query var `method` global y prefijarlo por plugin.
-- [x] Exigir nonce y una capability concreta en `option`, en `FormController` y en cada acción de `ListTableController`.
+- [x] Restaurar la comprobación `isPublic` en `RequestWeb`: solo métodos `public` (no constructor, destructor ni `__*`); `__call` para nombres desconocidos. Sin lista explícita (revertida por compatibilidad).
+- [x] Prefijar el query var de método por plugin, aceptando todavía `method`.
+- [x] Capability por método en `option` (`$capability` / `$capabilities`). Nonce opt-in (`$nonce`); `FormController` y `ListTableController` siempre lo incluyen.
 - [x] Escapar con `esc_html`, `esc_attr` y `esc_url` en `HTMLController`, las vistas y la tabla.
 - [x] Sanitizar `option`, `orderby` y la categoría del shortcode como identificador.
 - [x] Usar `EXTR_SKIP` en `ResponseView`.
@@ -113,8 +113,8 @@ Mismo parche que la fase 1, en cuanto el despacho quede cerrado.
 - [x] En `Apps::setConfig` asignar `$name`.
 - [x] Capturar `Throwable` y, si la ruta no existe, devolver la 404 del tema en lugar de `wp_die`.
 - [x] Pasar el request a `template.php` sin recorrer `$wp_filter`.
-- [x] Capability por defecto `manage_options`.
-- [x] Mover `flush_rewrite_rules` a la activación del plugin.
+- [~] Capability por defecto: se mantiene `install_plugins` por compatibilidad, con aviso en `WP_DEBUG`.
+- [x] `flush_rewrite_rules` en la activación y, si cambia el hash de rutas, una sola vez en `wp_loaded` (no en medio de `init`).
 - [x] Añadir el guard `ABSPATH` al resto de archivos PHP.
 - [x] Escapar el nombre en el generador de plugins, que ya verifica el nonce.
 
@@ -162,4 +162,4 @@ Después de las fases 1 a 5.
 
 - [ ] Verbos HTTP, parámetros en la URL y factories para no hacer `new $clase` dentro del framework.
 - [ ] Dejar `dbout/wp-orm` como dependencia opcional: el `Model` actual solo añade `describe()`.
-- [x] Cuando el generador copie `templateApp`, el plugin resultante tiene que nacer ya con nonce, escape y la lista de acciones. Si el molde sigue el patrón inseguro, cada plugin nuevo hereda los hallazgos de la fase 1. El molde declara `$webActions`, escapa las vistas, documenta el nonce de `option` y trae un controlador AJAX con lista blanca.
+- [x] Cuando el generador copie `templateApp`, el plugin resultante tiene que nacer ya con nonce, escape y la lista de acciones. Si el molde sigue el patrón inseguro, cada plugin nuevo hereda los hallazgos de la fase 1. El molde documenta que `public` es superficie pública, declara `$capability` con ejemplos de `$capabilities` y `$nonce`, escapa las vistas y trae un controlador AJAX con lista blanca.

@@ -121,7 +121,9 @@ class ListTableController extends \WP_List_Table{
     }
 
     /**
-     * Enlaces de fila. Cada option lleva nonce y tiene que ser un identificador.
+     * Enlaces de fila. La clave puede traer parámetros extra como en 1.3.1:
+     * 'trash&model=Proyectos' => 'Eliminar' genera ?page=…&option=trash&model=Proyectos&id=N.
+     * Cada enlace lleva el nonce de su option; solo se verifica si el controlador lo pide en $nonce.
      *
      * @param array<string, mixed> $item
      * @return array<string, string>
@@ -137,12 +139,20 @@ class ListTableController extends \WP_List_Table{
         $id = isset( $item['id'] ) && ( is_scalar( $item['id'] ) ) ? (string) $item['id'] : '';
 
         foreach ( $this->options as $key => $value ) {
-            if ( Actions::sanitizeIdentifier( (string) $key ) === null ) {
+            $parsed = self::parseOptionKey( (string) $key );
+            if ( $parsed === null ) {
                 continue;
             }
 
-            $url = AdminActions::url( $page, (string) $key, array( 'id' => $id ) );
-            $actions[ $key ] = sprintf(
+            $args       = $parsed['args'];
+            $args['id'] = $id;
+            $url        = AdminActions::url( $page, $parsed['option'], $args );
+            // La clave es la clase CSS del span en row_actions: solo el option.
+            $slot = $parsed['option'];
+            for ( $n = 2; isset( $actions[ $slot ] ); $n++ ) {
+                $slot = $parsed['option'] . '-' . $n;
+            }
+            $actions[ $slot ] = sprintf(
                 '<a href="%s">%s</a>',
                 esc_url( $url ),
                 esc_html( (string) $value )
@@ -150,6 +160,37 @@ class ListTableController extends \WP_List_Table{
         }
 
         return $actions;
+    }
+
+    /**
+     * Separa 'metodo&clave=valor&…' en el option y sus parámetros extra.
+     * El option tiene que ser un identificador PHP (nombre de método).
+     *
+     * @return array{option: string, args: array<string, string>}|null
+     */
+    public static function parseOptionKey( string $key ): ?array
+    {
+        $parts  = explode( '&', $key, 2 );
+        $option = Actions::sanitizeIdentifier( $parts[0] );
+        if ( $option === null ) {
+            return null;
+        }
+
+        $args = array();
+        if ( isset( $parts[1] ) && $parts[1] !== '' ) {
+            $extra = array();
+            parse_str( $parts[1], $extra );
+            foreach ( $extra as $name => $val ) {
+                if ( is_string( $name ) && $name !== '' && is_scalar( $val ) && ! in_array( $name, array( 'page', 'option' ), true ) ) {
+                    $args[ $name ] = (string) $val;
+                }
+            }
+        }
+
+        return array(
+            'option' => $option,
+            'args'   => $args,
+        );
     }
     /**
      * Returns the HTML of the table
@@ -178,10 +219,11 @@ class ListTableController extends \WP_List_Table{
         $page = AdminActions::currentPage();
         if ( ( $args['actions'] ?? false ) && $page !== null ) {
             foreach ( $args['actions'] as $key => $value ) {
-                if ( Actions::sanitizeIdentifier( (string) $key ) === null ) {
+                $parsed = self::parseOptionKey( (string) $key );
+                if ( $parsed === null ) {
                     continue;
                 }
-                echo '<a href="' . esc_url( AdminActions::url( $page, (string) $key ) ) . '" class="page-title-action">' . esc_html( (string) $value ) . '</a>';
+                echo '<a href="' . esc_url( AdminActions::url( $page, $parsed['option'], $parsed['args'] ) ) . '" class="page-title-action">' . esc_html( (string) $value ) . '</a>';
             }
         }
 

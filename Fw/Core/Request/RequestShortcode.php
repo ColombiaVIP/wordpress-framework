@@ -3,7 +3,8 @@
  * Gestiona las solicitudes y la creación de Shortcode.
  *
  * La categoría, la clase y el método tienen que ser identificadores.
- * El método, además, tiene que estar en la lista blanca del controlador.
+ * Cualquier método public del controlador se puede usar: [tag Categoria='Clase@metodo'].
+ * private, protected y mágicos no; en ese caso se usa error404() si existe.
  */
 
 namespace Fw\Core\Request;
@@ -61,16 +62,8 @@ class RequestShortcode extends Request
 			$actionRaw = $attrs[ $categoryKey ] ?? '';
 			unset( $attrs[ $categoryKey ] );
 
-			$params = array();
-			foreach ( $attrs as $key => $value ) {
-				if ( ! is_string( $key ) || is_array( $value ) || is_object( $value ) ) {
-					continue;
-				}
-				if ( Actions::sanitizeIdentifier( $key ) === null ) {
-					continue;
-				}
-				$params[ $key ] = (string) $value;
-			}
+			// El resto de atributos llega al controlador igual que en 1.3.1.
+			$params = $attrs;
 
 			$actionRaw = is_string( $actionRaw ) ? sanitize_text_field( $actionRaw ) : '';
 			if ( $actionRaw === '' ) {
@@ -161,14 +154,10 @@ class RequestShortcode extends Request
 	public function validations(): ?array
 	{
 		$controller = $this->getController();
-		$method     = Actions::sanitizeIdentifier( $this->getMethod() ) ?? '';
+		$method     = Actions::resolve( $controller, $this->getMethod() );
 
-		if ( $method === '' || ! Actions::isAllowed( $controller, $method ) ) {
-			if ( $method !== 'error404' && Actions::isAllowed( $controller, 'error404' ) ) {
-				$method = 'error404';
-			} else {
-				return null;
-			}
+		if ( $method === null ) {
+			return null;
 		}
 
 		$this->method = $method;

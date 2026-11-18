@@ -2,8 +2,9 @@
 /**
  * Nonce y URL de las acciones de menú (parámetro option).
  *
- * La pantalla principal (sin option) no lleva nonce: es la entrada del menú.
- * Cualquier option cambia estado o elige un método, y exige nonce y capability.
+ * El nonce es opcional (opt-in): solo se verifica para los métodos que el controlador
+ * lista en $nonce. Los enlaces y formularios del framework (ListTableController,
+ * FormController) ya lo incluyen siempre, así activar $nonce no exige cambiar vistas.
  */
 
 namespace Fw\Core\Request;

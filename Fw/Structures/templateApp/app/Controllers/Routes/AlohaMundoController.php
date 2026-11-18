@@ -24,13 +24,8 @@ class AlohaMundoController
     /** @var bool $enableUri Habilita el uso de métodos por medio de url: tusitio.com/aloha-mundo/metodo */
     public static bool $enableUri = true;
 
-    /**
-     * Métodos invocables por URL, además de index y error404.
-     * Un método public que no esté aquí no se ejecuta, aunque enableUri sea true.
-     *
-     * @var list<string>
-     */
-    public static array $webActions = array( 'saludo' );
+    # Con enableUri, cada método public es una URL: tusitio.com/aloha-mundo/metodo.
+    # Piense los métodos public para el usuario final; lo interno va en private.
 
     # Constructor
     public function __construct ()

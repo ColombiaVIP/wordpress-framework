@@ -147,9 +147,10 @@ class MenuPagesManager
         # Menu Title
         $menuPage['menuTitle'] = Request::propertyExists($class, 'menuTitle') ? $class::$menuTitle : spaceUpper($controllerName);
 
-        # Capability. En un sitio normal el administrador tiene manage_options;
-        # install_plugins ocultaba el menú al administrador de un sitio en multisitio.
+        # Capability. Aplica a todos los métodos del controlador ($capabilities puede
+        # sobrescribirla por método). Sin $capability se usa install_plugins, como en 1.3.1.
         $menuPage['capability'] = Request::controllerCapability($class);
+        self::noticeMissingCapability($class);
 
         # Slug
         $menuSlug = explode('\\', $class);
@@ -191,4 +192,42 @@ class MenuPagesManager
         return $menuPage;
     }
 
+
+    /**
+     * Aviso (solo con WP_DEBUG y para quien puede activar plugins) cuando una Menu Page
+     * no declara $capability. No cambia el comportamiento: se sigue usando install_plugins.
+     */
+    public static function noticeMissingCapability(string $class) : bool
+    {
+        if ( \Fw\Core\Request\Actions::declaresCapability($class) ) {
+            return false;
+        }
+
+        if ( ! defined('WP_DEBUG') || ! WP_DEBUG ) {
+            return false;
+        }
+
+        if ( ! function_exists('current_user_can') || ! current_user_can('activate_plugins') ) {
+            return false;
+        }
+
+        if ( ! class_exists('AdminNotice') ) {
+            require_once dirname(__DIR__, 2) . '/helpers/AdminNotice.php';
+        }
+
+        if ( class_exists('AdminNotice') ) {
+            \AdminNotice::generalAdminNotice(
+                'WP Framework',
+                sprintf(
+                    'La Menu Page <code>%s</code> no declara <code>public static $capability</code>. Se usa <code>%s</code> por defecto; decláralo para elegir quién puede entrar.',
+                    esc_html($class),
+                    esc_html(\Fw\Core\Request\Actions::DEFAULT_CAPABILITY)
+                ),
+                'warning',
+                true
+            );
+        }
+
+        return true;
+    }
 }

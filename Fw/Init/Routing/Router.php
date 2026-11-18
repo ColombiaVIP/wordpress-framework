@@ -13,6 +13,9 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 class Router
 {
+    /** Query var de método de 1.3.1. Se sigue registrando por compatibilidad. */
+    public const LEGACY_METHOD_VAR = 'method';
+
     /** @var string $routeName Nombre de la ruta. */
     private string $routeName;
     /** @var array $routes Rutas a registrar. */
@@ -52,8 +55,8 @@ class Router
      */
     public function compile() : void
     {
-        # Para el controlador. El query var "method" no se registra aquí:
-        # cada plugin usa el suyo, y solo si alguna ruta tiene enableUri.
+        # Para el controlador. El query var de método se registra solo si
+        # alguna ruta tiene enableUri (el del plugin y "method" por compatibilidad).
         add_rewrite_tag(
             "%{$this->routeName}%", 
             '(.+)'
@@ -89,6 +92,8 @@ class Router
         }
 
         add_rewrite_tag( '%' . $this->getMethodQueryVar() . '%', '([^/]*)' );
+        // Compatibilidad 1.3.1: reglas guardadas con &method= y enlaces ?method=.
+        add_rewrite_tag( '%' . self::LEGACY_METHOD_VAR . '%', '(.+)' );
         $this->methodTagReady = true;
     }
 

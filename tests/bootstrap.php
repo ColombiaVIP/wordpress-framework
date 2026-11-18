@@ -276,3 +276,14 @@ if ( ! function_exists( 'get_admin_page_title' ) ) {
 		return 'Título';
 	}
 }
+if ( ! function_exists( 'get_option' ) ) {
+	function get_option( $name, $default = false ) {
+		return $GLOBALS['wpfw_test_options'][ $name ] ?? $default;
+	}
+}
+if ( ! function_exists( 'update_option' ) ) {
+	function update_option( $name, $value ): bool {
+		$GLOBALS['wpfw_test_options'][ $name ] = $value;
+		return true;
+	}
+}

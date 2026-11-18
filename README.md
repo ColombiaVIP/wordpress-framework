@@ -35,57 +35,89 @@ composer install
 
 ## Contrato de un plugin de aplicación
 
-Un plugin de aplicación se instala aparte y arranca con `new Fw\Framework(__FILE__)`. El framework descubre controladores por carpeta. A partir de la 1.4.0 un método `public` no es una URL, ni un shortcode, ni una acción de menú.
+Un plugin de aplicación se instala aparte y arranca con `new Fw\Framework(__FILE__)`. El framework descubre controladores por carpeta. Un plugin hecho con 1.3.1 funciona sin cambios en 1.4.0.
 
-### Métodos web (rutas y shortcodes)
+### Regla de oro: `public` es la superficie pública
 
-En el controlador de `app/Controllers/Routes` o de `app/Controllers/Shortcodes`:
+Igual que en 1.3.1, **todo método `public` de un controlador se puede invocar desde fuera**, sin declararlo en ninguna lista ni pasar variables extra:
+
+| Tipo | Carpeta | Cómo se llama un método `public` |
+|------|---------|----------------------------------|
+| Ruta | `app/Controllers/Routes` | `https://sitio.test/ruta/metodo` (si `$enableUri = true`) |
+| Shortcode | `app/Controllers/Shortcodes` | `[mi_plugin Categoria='Clase@metodo']` |
+| Menu Page | `app/Controllers/MenuPages` | `wp-admin/admin.php?page=…&option=metodo` |
+
+Por eso:
+
+- Piense cada método `public` para el usuario final que lo va a abrir: valide la entrada y documéntelo como ruta, shortcode o acción.
+- Todo lo interno (consultas, cálculos, guardar en base, helpers) va en métodos `private` o `protected` y se llama desde los `public`.
+- `private`, `protected`, el constructor, el destructor y los métodos que empiezan por `__` **nunca** se ejecutan desde una URL, un shortcode ni un `option`. Si se piden, el framework usa `error404()` del controlador; si no lo tiene, la 404 del tema (rutas) o un `wp_die` 404 (menús).
+- En rutas, un nombre que no existe en la clase lo atiende `__call()` si el controlador lo tiene (por ejemplo `/proyectos/mi-proyecto`), como en 1.3.1. Un nombre que coincide con un método `private`/`protected` no llega a `__call()`: cae en `error404()`.
 
 ```php
-class PqrsController
+class PqrsController   // app/Controllers/Routes/PqrsController.php
 {
     public static bool $enableUri = true;
 
-    /** @var list<string> Además de index y error404. */
-    public static array $webActions = ['enviar', 'consultar'];
-
-    public function index() { /* /pqrs */ }
-
-    public function enviar() { /* /pqrs/enviar */ }
-
+    public function index()     { /* /pqrs */ }
+    public function enviar()    { /* /pqrs/enviar: valida y llama a guardar() */ }
     public function consultar() { /* /pqrs/consultar */ }
 
-    public function guardarEnBase() { /* public, pero la URL no lo llama */ }
+    private function guardar(array $datos) { /* interno: ninguna URL lo alcanza */ }
 }
 ```
 
-También vale el atributo `#[\Fw\Core\Request\WebAction]` sobre el método. `index` y `error404` no hace falta listarlos. Un método `private` o `protected` nunca es acción web.
+Con `enableUri` el segmento de la URL viaja en el query var del plugin (`cvip-loteria` → `cvip_loteria_method`); `method` se sigue leyendo por compatibilidad con reglas y enlaces de 1.3.1. Al actualizar, las reglas de reescritura se regeneran solas una vez (también al activar el plugin y cuando cambian las rutas).
 
-Con `enableUri` en true la URL sigue siendo `https://sitio.test/pqrs/enviar`. El query var ya no se llama `method`. Para la carpeta `cvip-loteria` es `cvip_loteria_method` (guiones a guion bajo, más `_method`). Si `enableUri` es false, ese query var no se registra y `?method=` no ejecuta nada.
+### Menu Pages: `$capability`, `$capabilities` y `$nonce`
 
-El shortcode sigue siendo `[cvip_loteria Pqrs=Pqrs@enviar]`. La categoría, la clase y el método tienen que ser identificadores (`A-Za-z_`). `@enviar` solo funciona si `enviar` está en `$webActions`.
-
-### Menú de administración
-
-La capability por defecto es `manage_options`. Se puede declarar `public static $capability`.
-
-La pantalla principal (sin `option`) no lleva nonce. Cualquier `option` exige el nonce `_wpfw_nonce` y la capability. El método tiene que estar en `$webActions`.
+`add_menu_page` ya exige estar logueado y tener `$capability`; además, el framework comprueba `current_user_can()` para el método concreto antes de llamarlo.
 
 ```php
-public static array $webActions = ['guardar', 'borrar'];
+class IngeurbeController   // app/Controllers/MenuPages/Ingeurbe/IngeurbeController.php
+{
+    public static $pageTitle = 'Proyectos INGEURBE';
+    public static $menuSlug  = 'listado';
 
-echo '<a href="' . esc_url(wpfw_admin_action_url($page, 'borrar', ['id' => $id])) . '">Borrar</a>';
+    // Obligatoria en la práctica: quién entra al menú y ejecuta TODOS los métodos public.
+    // Si falta, se usa install_plugins (como en 1.3.1) y, con WP_DEBUG, un aviso en el admin
+    // dice qué controlador no la declara.
+    public static $capability = 'edit_posts';
+
+    // Opcional: capability distinta para métodos concretos. Los no listados usan $capability.
+    public static array $capabilities = [
+        'trash' => 'delete_posts',
+    ];
+
+    // Opcional: métodos que exigen nonce (_wpfw_nonce) cuando llegan por ?option=.
+    public static array $nonce = ['save', 'trash'];   // o true para todos
+
+    public function index(array $params)  { /* listado */ }
+    public function save(array $params)   { /* ?option=save */ }
+    public function trash(array $params)  { /* ?option=trash&model=…&id=… */ }
+    public function error404(array $params) { /* método inexistente o sin permiso */ }
+}
 ```
 
-Un formulario POST hacia `option=save`:
+- **Solo `$capability` (código 1.3.1):** se comporta exactamente como antes; esa capability vale para todos los métodos.
+- **`$capabilities`:** sobrescribe por método. Si el usuario no la tiene, se muestra `error404()` del controlador (si lo puede ver) o `wp_die` 403.
+- **`$nonce` (opt-in):** sin esta propiedad no se exige nonce, así los enlaces viejos siguen sirviendo. `ListTableController` y `FormController` ya añaden el nonce a sus enlaces y formularios, así que activar `$nonce` no exige cambiar vistas. Para enlaces o formularios propios:
 
 ```php
+echo '<a href="' . esc_url(wpfw_admin_action_url($page, 'trash', ['model' => 'Proyectos', 'id' => $id])) . '">Eliminar</a>';
+
 <form method="post" action="<?php echo esc_url(admin_url('admin.php?page=' . $page . '&option=save')); ?>">
     <?php echo wpfw_admin_nonce_field($page, 'save'); ?>
 </form>
 ```
 
-`FormController` y `ListTableController` ya arman ese nonce. `orderby` solo ordena si el nombre es una columna real de la fila.
+Recomendado para métodos que escriben o borran: `$nonce` + una capability concreta en `$capabilities`, y no construir nombres de clase a partir de la petición.
+
+`ListTableController` acepta claves con parámetros, como en 1.3.1: `'trash&model=Proyectos' => 'Eliminar'` genera `?page=…&option=trash&model=Proyectos&id=N`. `orderby` solo ordena si el nombre es una columna real de la fila.
+
+### Shortcodes
+
+`[cvip_loteria Pqrs=Pqrs@enviar]` ejecuta `enviar()` si es `public`. La categoría, la clase y el método tienen que ser identificadores (`A-Za-z0-9_`). Los demás atributos llegan completos al controlador.
 
 ### AJAX
 
@@ -131,40 +163,37 @@ Por defecto una acción no es pública, exige nonce y, si no es pública, exige 
 
 En la hoja se escapa cada dato: `esc_html` para texto, `esc_attr` para atributos, `esc_url` para enlaces. El `$content` de un layout es HTML que ya devolvió `view()`. No se vuelve a escapar.
 
-### Cambios que rompen plugins ya generados
+### Compatibilidad con plugins de 1.3.1
 
-1. Hay que declarar en `$webActions` (o con `#[WebAction]`) cada método que hoy se abre por URL, shortcode u `option`. `index` y `error404` siguen igual.
-2. `?method=accion` deja de despachar. La ruta bonita `/controlador/accion` se mantiene si `enableUri` es true.
-3. Los enlaces `admin.php?page=...&option=accion` necesitan `wpfw_admin_action_url()`. Sin el nonce responden 403.
-4. La capability por defecto del menú pasa de `install_plugins` a `manage_options`.
-5. Las reglas de reescritura se regeneran al activar el plugin, no en cada visita. Después de cambiar rutas hay que reactivar el plugin (o guardar los enlaces permanentes).
-6. La categoría del shortcode y las claves de sus atributos tienen que ser identificadores.
-7. Textos que antes salían con HTML crudo ahora salen escapados.
+No hay que tocar código. Cambios visibles:
+
+1. Un método `private`/`protected` pedido por URL ya no llega a `__call()` ni da un error fatal: cae en `error404()` o en la 404 del tema.
+2. Una ruta inexistente devuelve la 404 del tema en lugar de `wp_die`.
+3. Textos que antes salían con HTML crudo en `HTMLController` y `ListTableController` ahora salen escapados.
 
 ### Nota para cvip-loteria
 
-PQRS, contratos y documentos pueden ser rutas con `$webActions` (`enviar`, `consultar`, `descargar`) y `enableUri` donde el visitante deba abrir el método. Lo que modifica datos en el admin va por `option` con nonce, o por AJAX con `public`, `capability` y `nonce` declarados en `$ajaxActions`. Un helper interno, aunque sea `public`, se queda fuera de las dos listas.
+PQRS, contratos y documentos pueden ser rutas con `enableUri`: sus métodos `public` son lo que el visitante abre; lo interno va `private`. Lo que modifica datos en el admin va por `option` con `$nonce` y `$capabilities`, o por AJAX con `public`, `capability` y `nonce` declarados en `$ajaxActions`.
 
 ---
 ### Changelog
 
 ## [1.4.0] 20261118:
 
-Cierre del despacho abierto, del HTML sin escapar y de las acciones de administración sin nonce. Hay una capa AJAX con lista blanca. La versión sube de 1.3.1 a 1.4.0 porque cambia lo que un plugin de aplicación puede invocar desde fuera.
+Endurecimiento retrocompatible: un plugin hecho con 1.3.1 funciona sin cambios.
 
-* Un método `public` ya no es una ruta. Se declara en `$webActions` o con `#[Fw\Core\Request\WebAction]`. `index` y `error404` siguen permitidos. La comprobación `isPublic` vuelve a ejecutarse.
-* El query var global `method` desaparece. Con `enableUri` el segmento de la URL usa `{carpeta}_method` (`cvip-loteria` → `cvip_loteria_method`). Si `enableUri` es false, ese dato no se lee.
-* `option` en un menú exige el nonce `_wpfw_nonce` y la capability del controlador. Atajos: `wpfw_admin_action_url()` y `wpfw_admin_nonce_field()`. `FormController` y `ListTableController` los incluyen. `orderby` solo acepta una columna de la fila.
-* La capability por defecto del menú es `manage_options`.
-* Shortcode: categoría, clase y método son identificadores, y el método tiene que estar en la lista blanca.
+* Los métodos `public` siguen siendo la superficie pública (ruta con `enableUri`, shortcode `Clase@metodo`, `?option=` en menús), sin listas ni variables extra.
+* Vuelve la comprobación `isPublic`: `private`, `protected`, constructor, destructor y `__*` nunca se ejecutan desde fuera; caen en `error404()`. `__call()` sigue atendiendo nombres desconocidos en rutas.
+* Menu Pages: `$capability` aplica a todos los métodos y el framework la comprueba antes de llamar al método. Nuevo `$capabilities` opcional por método. Sin `$capability` se sigue usando `install_plugins`, con aviso en el admin si `WP_DEBUG`.
+* Nonce opt-in con `$nonce`. Atajos `wpfw_admin_action_url()` y `wpfw_admin_nonce_field()`; `FormController` y `ListTableController` ya lo incluyen.
+* `ListTableController` mantiene las claves con parámetros (`'trash&model=X'`) y escapa celdas y enlaces. `orderby` solo acepta una columna de la fila.
+* Query var de método por plugin (`{carpeta}_method`), con `method` todavía aceptado. Las reglas se regeneran una vez al actualizar, al cambiar rutas y al activar el plugin (en `wp_loaded`, no en medio de `init`).
 * `HTMLController`, las vistas hoja y la tabla escapan texto, atributos y URLs.
 * `template.php` despacha al processor que coincidió con la petición y no recorre los filtros globales. Dos plugins no se pisan.
-* Una ruta inexistente, un método fuera de la lista o un `Throwable` en el controlador caen en la 404 del tema. Ya no se llama a `wp_die` en ese caso.
-* `flush_rewrite_rules` corre al activar el plugin, no en cada `init`.
-* Los PHP del plugin cortan el acceso directo si no existe `ABSPATH`. Los cuatro helpers que carga Composer solo salen si el archivo se abrió directo, para no cortar la consola.
-* AJAX en `app/Controllers/Ajax`: `$ajaxActions` declara `public`, `capability` y `nonce`. El gancho es `{slug}_{metodo}`. No hay includes tomados de la petición.
-* `templateApp` nace con la lista de acciones, vistas escapadas, el nonce de menú documentado y un controlador AJAX de ejemplo.
-* Pruebas PHPUnit con Brain Monkey: despacho, nonce, escape, aislamiento de dos plugins, AJAX, shortcode, assets y `Model::describe()`.
+* Una ruta inexistente o un `Throwable` en el controlador caen en la 404 del tema en lugar de `wp_die`.
+* Los PHP del plugin cortan el acceso directo si no existe `ABSPATH`.
+* AJAX opcional en `app/Controllers/Ajax`: `$ajaxActions` declara `public`, `capability` y `nonce`. El gancho es `{slug}_{metodo}`.
+* Pruebas PHPUnit con Brain Monkey: despacho público por defecto, private/protected, `__call`, capability, `$capabilities`, nonce opt-in, escape, aislamiento, AJAX, shortcode, assets y `Model::describe()`.
 
 ## [1.3.1] 20260928:
 

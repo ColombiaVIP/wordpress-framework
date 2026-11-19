@@ -9,7 +9,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 
 <div class="fw-form-create-plugin">
     <form method="POST">
-        <?=wp_nonce_field('create-plugin-nonce', 'fwNonce'); ?>
+        <?php wp_nonce_field( 'create-plugin-nonce', 'fwNonce' ); ?>
         <div class="input-container">
             <label for="data[name]">Plugin Name *</label>
             <input type="text" name="data[pluginName]" required>

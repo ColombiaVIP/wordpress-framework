@@ -221,6 +221,7 @@ Endurecimiento retrocompatible: un plugin hecho con 1.3.1 funciona sin cambios.
 * `template.php` despacha al processor que coincidió con la petición y no recorre los filtros globales. Dos plugins no se pisan.
 * Una ruta inexistente o un `Throwable` en el controlador caen en la 404 del tema en lugar de `wp_die`.
 * Los PHP del plugin cortan el acceso directo si no existe `ABSPATH`.
+* Menu WP Framework: el formulario de crear plugin solo se procesa por POST, con `install_plugins` y nonce `fwNonce` válido (si no, `wp_die` 403 antes de crear nada). El nonce se imprime una sola vez.
 * AJAX opcional en `app/Controllers/Ajax`: todo método `public` escrito en el controlador es una acción con gancho `{slug}_{metodo}`, sin listas. Permisos como en los menús: `$capability` para todo el controlador, `$capabilities` por método y `$nonce` opt-in. Capability `''` = acción anónima (`wp_ajax_nopriv_`). Sin `$capability`: `install_plugins` y aviso con `WP_DEBUG`. No se exponen métodos `static`, `__*` ni heredados de clases o traits fuera del plugin.
 * `$ajaxActions` (de la primera versión de esta capa) sigue funcionando igual en los controladores que lo declaran.
 * `wpfw_ajax_client_config()` solo entrega las acciones que el usuario actual puede ejecutar e indica `anonimo` y `requiereNonce`.

@@ -26,9 +26,12 @@ class WpFramework
      **/
     public function index()
     { 
-        # Si llegan datos del formulario.
-        if ( $_POST['data'] ?? false ) {
-            $this->createPlugin($_POST['data']);
+        # Si llegan datos del formulario (solo por POST).
+        if ( isset( $_POST['data'] ) && 'POST' === ( $_SERVER['REQUEST_METHOD'] ?? '' ) ) {
+            $data = $this->validatedPluginData();
+            if ( $data !== null ) {
+                $this->createPlugin( $data );
+            }
         }
 
         return view('layout', [
@@ -39,17 +42,56 @@ class WpFramework
     }
 
     /**
-     * Creación del plugin.
+     * Valida la petición de creación de plugin (CSRF y permisos)
+     * y devuelve los datos del formulario sin barras.
+     *
+     * Sin permiso install_plugins o sin nonce válido la petición se corta
+     * con wp_die (403) antes de crear nada.
+     *
+     * @return array|null
+     **/
+    private function validatedPluginData() : ?array
+    {
+        if ( ! current_user_can( 'install_plugins' ) ) {
+            wp_die( esc_html( 'No tienes permiso para crear plugins.' ), '', array( 'response' => 403 ) );
+            return null;
+        }
+
+        $nonce = isset( $_POST['fwNonce'] ) && is_string( $_POST['fwNonce'] )
+            ? sanitize_text_field( wp_unslash( $_POST['fwNonce'] ) )
+            : '';
+
+        if ( $nonce === '' || ! wp_verify_nonce( $nonce, 'create-plugin-nonce' ) ) {
+            wp_die( esc_html( 'Error: Invalid nonce check.' ), '', array( 'response' => 403 ) );
+            return null;
+        }
+
+        if ( ! is_array( $_POST['data'] ) ) {
+            return null;
+        }
+
+        $data = array();
+        foreach ( $_POST['data'] as $key => $value ) {
+            if ( is_string( $key ) && is_string( $value ) ) {
+                $data[ $key ] = wp_unslash( $value );
+            }
+        }
+
+        if ( trim( (string) ( $data['pluginName'] ?? '' ) ) === '' ) {
+            return null;
+        }
+
+        return $data;
+    }
+
+    /**
+     * Creación del plugin. Solo se llama después de validatedPluginData().
      *
      * @param array $data
      * @return void
      **/
     private function createPlugin(array $data) : void
     {
-        if ( !wp_verify_nonce($_REQUEST['fwNonce'], 'create-plugin-nonce') ) {
-            wp_die("Error: Invalid nonce check.");
-        }
-        
         echo '<h1>Create Component: ' . esc_html( (string) ($data['pluginName'] ?? '') ) . '.</h1>';
         
         if ( !\Fw\Structures\BuildStructures::basePlugin($data) ) {

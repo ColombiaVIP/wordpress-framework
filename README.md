@@ -198,7 +198,7 @@ No hay que tocar código. Cambios visibles:
 
 1. Un método `private`/`protected` pedido por URL ya no llega a `__call()` ni da un error fatal: cae en `error404()` o en la 404 del tema.
 2. Una ruta inexistente devuelve la 404 del tema en lugar de `wp_die`.
-3. Textos que antes salían con HTML crudo en `HTMLController` y `ListTableController` ahora salen escapados.
+3. Textos que antes salían con HTML crudo en `HTMLController` y en las acciones de `ListTableController` ahora salen escapados. Las celdas de la tabla pasan por `wp_kses_post`: conservan el formato del editor (`<strong>`, `<em>`, enlaces) y pierden `<script>`, `on*` y `javascript:`.
 
 ### Nota para cvip-loteria
 
@@ -215,7 +215,7 @@ Endurecimiento retrocompatible: un plugin hecho con 1.3.1 funciona sin cambios.
 * Vuelve la comprobación `isPublic`: `private`, `protected`, constructor, destructor y `__*` nunca se ejecutan desde fuera; caen en `error404()`. `__call()` sigue atendiendo nombres desconocidos en rutas.
 * Menu Pages: `$capability` aplica a todos los métodos y el framework la comprueba antes de llamar al método. Nuevo `$capabilities` opcional por método. Sin `$capability` se sigue usando `install_plugins`, con aviso en el admin si `WP_DEBUG`.
 * Nonce opt-in con `$nonce`. Atajos `wpfw_admin_action_url()` y `wpfw_admin_nonce_field()`; `FormController` y `ListTableController` ya lo incluyen.
-* `ListTableController` mantiene las claves con parámetros (`'trash&model=X'`) y escapa celdas y enlaces. `orderby` solo acepta una columna de la fila.
+* `ListTableController` mantiene las claves con parámetros (`'trash&model=X'`), escapa enlaces y acciones, y filtra las celdas con `wp_kses_post` (conserva el formato del editor). `orderby` solo acepta una columna de la fila.
 * Query var de método por plugin (`{carpeta}_method`), con `method` todavía aceptado. Las reglas se regeneran una vez al actualizar, al cambiar rutas y al activar el plugin (en `wp_loaded`, no en medio de `init`).
 * `HTMLController`, las vistas hoja y la tabla escapan texto, atributos y URLs.
 * `template.php` despacha al processor que coincidió con la petición y no recorre los filtros globales. Dos plugins no se pisan.

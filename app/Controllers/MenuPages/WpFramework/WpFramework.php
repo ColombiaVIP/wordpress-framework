@@ -18,6 +18,7 @@ class WpFramework
     # https://developer.wordpress.org/reference/functions/add_menu_page
     public static $pageTitle = 'WP Framework';
     public static $menuTitle = 'WP Framework';
+    public static $capability = 'install_plugins';
 
     /**
      * Método por default.

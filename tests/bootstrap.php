@@ -65,6 +65,13 @@ if ( ! function_exists( 'esc_html' ) ) {
 		return htmlspecialchars( (string) $text, ENT_QUOTES, 'UTF-8' );
 	}
 }
+if ( ! function_exists( 'wp_kses_post' ) ) {
+	// Aproximación de prueba: quita script/style con su contenido y deja etiquetas de formato.
+	function wp_kses_post( $text ): string {
+		$text = (string) preg_replace( '#<(script|style)\b[^>]*>.*?</\1>#is', '', (string) $text );
+		return strip_tags( $text, '<strong><b><em><i><span><br><p><a><ul><ol><li>' );
+	}
+}
 if ( ! function_exists( 'esc_attr' ) ) {
 	function esc_attr( $text ): string {
 		return htmlspecialchars( (string) $text, ENT_QUOTES, 'UTF-8' );

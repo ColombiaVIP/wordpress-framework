@@ -112,12 +112,28 @@ class ListTableController extends \WP_List_Table{
         {
             if ($column_name == 'options' OR $column_name ==$this->main){
                 $actions = $this->actionLinks( is_array( $item ) ? $item : array() );
-                $label   = esc_html( (string) ( $item[ $column_name ] ?? '➤' ) );
+                $label   = self::cell( $item[ $column_name ] ?? '➤' );
 
                 return sprintf('%1$s %2$s', $label, $this->row_actions($actions));
             }
-            return esc_html( (string) ( $item[ $column_name ] ?? '' ) );
+            return self::cell( $item[ $column_name ] ?? '' );
          }
+    }
+
+    /**
+     * Contenido de una celda. Como en 1.3.1 se respeta el formato que guarda el editor
+     * (<strong>, <em>, <span>, enlaces…), pero pasa por wp_kses_post: se quitan <script>,
+     * atributos on* y URLs javascript:. Lo que no es texto se imprime vacío.
+     *
+     * @param mixed $value
+     */
+    private static function cell( $value ): string
+    {
+        if ( ! is_scalar( $value ) ) {
+            return '';
+        }
+
+        return wp_kses_post( (string) $value );
     }
 
     /**

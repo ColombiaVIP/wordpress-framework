@@ -91,13 +91,44 @@ class EscapeHtmlTest extends FrameworkTestCase
 
 		$celda = $list->column_default( $list->items[0], 'nombre' );
 		self::assertStringNotContainsString( '<script>', $celda );
-		self::assertStringContainsString( '&lt;script&gt;', $celda );
 
 		$acciones = $list->column_default( $list->items[0], 'id' );
 		self::assertStringContainsString( '_wpfw_nonce', $acciones );
 		self::assertStringContainsString( 'option=delete', $acciones );
 		self::assertStringNotContainsString( '<b>', $acciones );
 		self::assertStringContainsString( '&lt;b&gt;Borrar&lt;/b&gt;', $acciones );
+	}
+
+	public function test_la_tabla_conserva_el_formato_del_editor(): void
+	{
+		$_GET['page'] = 'proyectos';
+
+		$list = new ListTableController();
+		$list->prepare_items(
+			array(
+				'items'   => array(
+					array(
+						'id'          => '1',
+						'nombre'      => 'Treze',
+						'descripcion' => '<strong>Alttanova</strong> es <em>NO VIS</em><script>alert(1)</script>',
+					),
+				),
+				'columns' => array(
+					'id'          => 'Id',
+					'nombre'      => 'Nombre',
+					'descripcion' => 'Descripción',
+				),
+				'main'    => 'nombre',
+				'search'  => false,
+				'options' => array(),
+			)
+		);
+
+		$celda = $list->column_default( $list->items[0], 'descripcion' );
+		self::assertStringContainsString( '<strong>Alttanova</strong>', $celda );
+		self::assertStringContainsString( '<em>NO VIS</em>', $celda );
+		self::assertStringNotContainsString( '<script>', $celda );
+		self::assertSame( '', $list->column_default( array( 'descripcion' => array( 'x' ) ), 'descripcion' ) );
 	}
 
 	public function test_orderby_solo_acepta_una_columna_real(): void

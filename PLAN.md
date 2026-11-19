@@ -10,6 +10,12 @@ Orden de trabajo: fase 1 esta semana, fase 2 en el mismo parche, fases 3 a 5 ant
 
 Leyenda: `[x]` completado, `[~]` parcial, `[ ]` pendiente.
 
+## Estado al 19 nov 2026
+
+Versión `1.5.0`. ORM opcional (aprobado por César, 19 nov 2026): `Fw/Cargador.php` registra el autoload de Composer sin incluir los "files" de las dependencias; Dbout, Illuminate, Carbon y los helpers globales de Laravel (`collect`, `env`, `e`, `value`, `tap`, `str`, `event`…) se cargan con el primer modelo o con `WPFW_ORM`. Proyectos Inge Urbe (Eloquent con `SoftDeletes`, relaciones y `updateOrCreate`) sigue igual; cvip-loteria-wpfw no carga nada del ORM. Pruebas en `CargadorOrmTest`.
+
+Sigue abierto sobre el ORM: quitar las dependencias del zip para sitios que no lo usan (hoy el código sigue en `vendor/`, solo no se carga) y revisar si `Model` debe extender `AbstractModel` o usarlo directamente.
+
 ## Estado al 18 nov 2026
 
 Cierre de seguridad para poder migrar un plugin de aplicación (cvip-loteria). Versión `1.4.0`.

@@ -192,6 +192,31 @@ Importante: `$capability`, `$capabilities` y `$nonce` se aplican al controlador 
 
 En la hoja se escapa cada dato: `esc_html` para texto, `esc_attr` para atributos, `esc_url` para enlaces. El `$content` de un layout es HTML que ya devolvió `view()`. No se vuelve a escapar.
 
+### Modelos y ORM (carga bajo demanda)
+
+Desde 1.5.0 el ORM (`dbout/wp-orm` con Illuminate Database y Carbon) y los helpers globales que traen sus dependencias (`collect()`, `env()`, `e()`, `value()`, `tap()`, `str()`, `event()`…) **no se cargan al arrancar**. `wp-framework.php` usa `Fw/Cargador.php` en lugar de `vendor/autoload.php`: registra el mismo autoload de Composer, incluye de inmediato solo los helpers del framework (`Fw/helpers`) y los polyfills de Symfony, y deja el resto en espera.
+
+Se cargan solos la primera vez que se pide una clase de `vendor/`, que es lo que pasa al declarar un modelo:
+
+```php
+use WordpressFramework\Models\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class Proyectos extends Model { use SoftDeletes; } // aquí se carga el ORM
+```
+
+Un plugin con modelos (como Proyectos Inge Urbe) no cambia nada. Un sitio sin modelos (como cvip-loteria-wpfw, que usa `$wpdb->prepare`) no carga Illuminate, Carbon ni los helpers de Laravel, y esos nombres globales quedan libres para otros plugins.
+
+Para cargarlo siempre desde el arranque (por ejemplo, un plugin que llama `collect()` antes de tocar un modelo):
+
+```php
+define( 'WPFW_ORM', true );   // en wp-config.php
+// o en código, antes de usar el helper:
+Fw\Cargador::cargarOrm();
+```
+
+`Fw\Cargador::ormCargado()` dice si ya se cargó y la acción `wpfw_orm_cargado` avisa cuando ocurre. Si `vendor/composer` no trae los mapas de Composer, el cargador vuelve a `vendor/autoload.php` (todo de una vez). Pedir cualquier clase de `vendor/` (también `Psr\…` o `Symfony\…`) cuenta como uso del ORM.
+
 ### Compatibilidad con plugins de 1.3.1
 
 No hay que tocar código. Cambios visibles:
@@ -199,6 +224,7 @@ No hay que tocar código. Cambios visibles:
 1. Un método `private`/`protected` pedido por URL ya no llega a `__call()` ni da un error fatal: cae en `error404()` o en la 404 del tema.
 2. Una ruta inexistente devuelve la 404 del tema en lugar de `wp_die`.
 3. Textos que antes salían con HTML crudo en `HTMLController` y en las acciones de `ListTableController` ahora salen escapados. Las celdas de la tabla pasan por `wp_kses_post`: conservan el formato del editor (`<strong>`, `<em>`, enlaces) y pierden `<script>`, `on*` y `javascript:`.
+4. (1.5.0) Los helpers globales de Laravel solo existen después de usar un modelo. Si un plugin los llama sin modelos, define `WPFW_ORM`.
 
 ### Nota para cvip-loteria
 
@@ -206,6 +232,11 @@ PQRS, contratos y documentos pueden ser rutas con `enableUri`: sus métodos `pub
 
 ---
 ### Changelog
+
+## [1.5.0] 20261119:
+
+* ORM opcional: `Fw/Cargador.php` reemplaza a `vendor/autoload.php` en el arranque. Dbout, Illuminate, Carbon y los helpers globales de Laravel se cargan al usar el primer modelo (o siempre con `WPFW_ORM`). Los plugins con modelos no cambian.
+* Pruebas: `CargadorOrmTest` (arranque sin ORM, clases del framework no lo disparan, un modelo lo carga con `SoftDeletes` y `collect()`, `WPFW_ORM`, convivencia con `vendor/autoload.php`).
 
 ## [1.4.0] 20261118:
 
